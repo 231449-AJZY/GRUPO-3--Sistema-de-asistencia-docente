@@ -4,27 +4,16 @@
 # https://aka.ms/yaml
 
 trigger:
-  branches:
-    include:
-      - main        # rama que dispara el deploy
-      # - develop   # puedes agregar más ramas
+- main
 
 pool:
-  vmImage: 'ubuntu-latest'
+  vmImage: ubuntu-latest
 
 steps:
-  - task: NodeTool@0          # cámbialo según tu stack
-    inputs:
-      versionSpec: '18.x'
-    displayName: 'Instalar Node.js'
+- script: echo Hello, world!
+  displayName: 'Run a one-line script'
 
-  - script: |
-      npm install
-      npm run build
-    displayName: 'Instalar dependencias y build'
-
-  - task: AzureWebApp@1       # o la task correspondiente a tu servicio
-    inputs:
-      azureSubscription: 'TU_SERVICE_CONNECTION'
-      appName: 'TU_APP_NAME'
-      package: '$(Build.ArtifactStagingDirectory)/**/*.zip'
+- script: |
+    echo Add other tasks to build, test, and deploy your project.
+    echo See https://aka.ms/yaml
+  displayName: 'Run a multi-line script'
