@@ -1,0 +1,92 @@
+.BioM{
+    background: rgba(43, 71, 147, 0.2);
+    width: 500px;
+    height: 700px;
+    border-radius: 10px;
+    transition: all 0.5s;
+    color:white;
+    justify-content: center;
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    gap:100px;
+}
+.BioM:hover{
+    transform: translateY(-10px);
+    background: rgba(46, 74, 149, 0.6)
+}
+.Ico{
+    color:rgba(100, 140, 210, 0.85);
+}
+
+.text{
+    text-align: center;
+    width:350px;
+}
+
+.circule1{
+    border-radius: 100%;
+    background: rgba(100, 140, 210, 0);
+    border:solid;
+    border-color:rgba(40, 65, 130, 0.4);
+    width: 300px;
+    height: 300px;
+    display:flex;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.5s;
+}
+
+.circule2{
+    border-radius: 100%;
+    background: rgba(100, 140, 210, 0);
+    border:solid;
+    border-color:rgba(40, 65, 130, 0.4);
+    width: 200px;
+    height: 200px;
+    display:flex;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.5s;
+}
+
+.circule3{
+    border-radius: 100%;
+    background: rgba(100, 140, 210, 0);
+    border:solid;
+    border-color:rgba(40, 65, 130, 0.4);
+    width: 100px;
+    height: 100px;
+    display:flex;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.5s;
+}
+
+.circule1:hover,.circule2:hover, .circule3:hover{
+    transform: translateY(-10px);
+}
+
+.caja{
+    display:flex;
+    justify-content: center;
+    align-items: center;
+    background: rgb(16, 31, 68);
+    width: 300px;
+    height: 400px;
+    border-radius: 10px;
+    border:solid;
+    border-color: rgb(70, 101, 180);
+}
+
+.burbuja{
+    display:flex;
+    justify-content: center;
+    align-items: center;
+    background: rgb(9, 19, 43);
+    border-radius:100%;
+    width: 150px;
+    height: 150px;
+    border:solid;
+    border-color: rgb(70, 101, 180);
+}
