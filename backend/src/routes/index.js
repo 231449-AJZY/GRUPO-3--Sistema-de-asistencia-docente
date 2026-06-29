@@ -1,12 +1,12 @@
 const router = require('express').Router();
 
-const authRoutes = require('./auth.routes');
+const authRoutes     = require('./auth.routes');
+const docentesRoutes = require('./docentes.routes');
 
-// Registrar todas las rutas aquí
-router.use('/auth', authRoutes);
+router.use('/auth',     authRoutes);
+router.use('/docentes', docentesRoutes);
 
-// Cuando el equipo agregue más rutas, solo añadir aquí:
-// router.use('/docentes',   docentesRoutes);
+// Próximas rutas:
 // router.use('/horarios',   horariosRoutes);
 // router.use('/asistencia', asistenciaRoutes);
 // router.use('/reportes',   reportesRoutes);

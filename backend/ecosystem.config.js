@@ -2,7 +2,7 @@ module.exports = {
   apps: [{
     name: 'unsaac-api',
     script: 'server.js',
-    cwd: '/opt/unsaac-api',
+    cwd: '/opt/GRUPO-3--Sistema-de-asistencia-docente/backend',
     env: {
       PORT: 3000,
       DB_HOST: 'localhost',
