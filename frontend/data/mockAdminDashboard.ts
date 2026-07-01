@@ -1,0 +1,135 @@
+import type { AdminDashboardData } from "@/types/dashboard";
+
+export const mockAdminDashboard: AdminDashboardData = {
+  metrics: [
+    {
+      title: "Docentes registrados",
+      value: 186,
+      description: "+4.8% respecto al mes anterior",
+      color: "blue",
+      icon: "users",
+      trend: [20, 28, 25, 33, 31, 38, 34, 39],
+    },
+    {
+      title: "Usuarios activos",
+      value: 149,
+      description: "+2.1% usuarios conectados hoy",
+      color: "green",
+      icon: "user",
+      trend: [18, 20, 26, 24, 30, 34, 35, 39],
+    },
+    {
+      title: "Asistencias del día",
+      value: 158,
+      description: "+7.3% vs. promedio semanal",
+      color: "yellow",
+      icon: "calendar",
+      trend: [14, 24, 35, 48, 40, 52, 47, 58],
+    },
+    {
+      title: "Inasistencias detectadas",
+      value: 16,
+      description: "-1.5% respecto a ayer",
+      color: "red",
+      icon: "warning",
+      trend: [22, 21, 20, 18, 19, 17, 16, 15],
+    },
+  ],
+
+  hourlyActivity: [
+    { hour: "06:00", value: 0 },
+    { hour: "07:00", value: 13 },
+    { hour: "08:00", value: 25 },
+    { hour: "09:00", value: 40 },
+    { hour: "10:00", value: 30 },
+    { hour: "11:00", value: 39 },
+    { hour: "12:00", value: 25 },
+    { hour: "13:00", value: 14 },
+    { hour: "14:00", value: 8 },
+    { hour: "15:00", value: 11 },
+    { hour: "16:00", value: 5 },
+    { hour: "17:00", value: 2 },
+    { hour: "18:00", value: 1 },
+  ],
+
+  recentAlerts: [
+    {
+      id: 1,
+      type: "tardanza",
+      title: "Tardanza registrada",
+      description: "Dr. Carlos Alberto Quispe Mendoza",
+      time: "08:45",
+    },
+    {
+      id: 2,
+      type: "inasistencia",
+      title: "Inasistencia detectada",
+      description: "Mg. Martha Paredes Zegarra",
+      time: "09:15",
+    },
+    {
+      id: 3,
+      type: "horario",
+      title: "Cambio de horario aprobado",
+      description: "Curso: Base de Datos II - Aula B205",
+      time: "09:32",
+    },
+    {
+      id: 4,
+      type: "docente",
+      title: "Nuevo docente incorporado",
+      description: "Ing. Walter P. Orosco Soto",
+      time: "09:48",
+    },
+  ],
+
+  recentAttendances: [
+    {
+      id: 1,
+      docente: "Dr. Alberto Acosta Sullca",
+      hora: "10:22:14",
+      estado: "Presente",
+      aula: "A-101",
+      metodo: "Biométrico",
+    },
+    {
+      id: 2,
+      docente: "Mg. Verónica Holgado Canales",
+      hora: "10:21:48",
+      estado: "Presente",
+      aula: "B-205",
+      metodo: "Biométrico",
+    },
+    {
+      id: 3,
+      docente: "Lic. Miguel Ángel Valdivia C.",
+      hora: "10:20:37",
+      estado: "Tardanza",
+      aula: "C-303",
+      metodo: "Biométrico",
+    },
+    {
+      id: 4,
+      docente: "Dra. Nelly P. Jiménez Chino",
+      hora: "10:19:58",
+      estado: "Presente",
+      aula: "A-102",
+      metodo: "Biométrico",
+    },
+    {
+      id: 5,
+      docente: "Ing. Walter P. Orosco Soto",
+      hora: "10:19:21",
+      estado: "Presente",
+      aula: "D-404",
+      metodo: "Biométrico",
+    },
+  ],
+
+  biometricStatus: {
+    connectedDevices: "12/12",
+    syncStatus: "Actualizado",
+    lastRecord: "10:24:14",
+    serverStatus: "En línea",
+  },
+};

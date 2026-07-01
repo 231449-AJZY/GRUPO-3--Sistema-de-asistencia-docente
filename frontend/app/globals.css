@@ -1,26 +1,278 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #eef4fa;
+  --foreground: #0f213a;
+
+  --unsaac-primary: #061b34;
+  --unsaac-top: #0a2e52;
+  --unsaac-sidebar: #0d385f;
+  --unsaac-orange: #ff8a00;
+
+  --unsaac-bg: #eef4fa;
+  --unsaac-content: #fbfdff;
+  --unsaac-content-soft: #f4f7fb;
+  --unsaac-card: #ffffff;
+  --unsaac-border: #dfe7f1;
+
+  --unsaac-text: #0f213a;
+  --unsaac-muted: #52627a;
+
+  --unsaac-blue: #2563eb;
+  --unsaac-green: #16a34a;
+  --unsaac-yellow: #f59e0b;
+  --unsaac-red: #dc2626;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+
+  --color-unsaac-primary: var(--unsaac-primary);
+  --color-unsaac-top: var(--unsaac-top);
+  --color-unsaac-sidebar: var(--unsaac-sidebar);
+  --color-unsaac-orange: var(--unsaac-orange);
+
+  --color-unsaac-bg: var(--unsaac-bg);
+  --color-unsaac-content: var(--unsaac-content);
+  --color-unsaac-content-soft: var(--unsaac-content-soft);
+  --color-unsaac-card: var(--unsaac-card);
+  --color-unsaac-border: var(--unsaac-border);
+
+  --color-unsaac-text: var(--unsaac-text);
+  --color-unsaac-muted: var(--unsaac-muted);
+
+  --color-unsaac-blue: var(--unsaac-blue);
+  --color-unsaac-green: var(--unsaac-green);
+  --color-unsaac-yellow: var(--unsaac-yellow);
+  --color-unsaac-red: var(--unsaac-red);
+
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), Inter, Segoe UI, Arial, sans-serif;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* ============================================================
+   ANIMACIONES DASHBOARD ADMIN
+   ============================================================ */
+
+@keyframes dashboardFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes dashboardFadeDown {
+  from {
+    opacity: 0;
+    transform: translateY(-14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes dashboardScaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes dashboardDrawLine {
+  from {
+    stroke-dashoffset: 1000;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes dashboardAreaIn {
+  from {
+    opacity: 0;
+    transform: scaleY(0.2);
+  }
+  to {
+    opacity: 0.12;
+    transform: scaleY(1);
+  }
+}
+
+@keyframes dashboardDotPop {
+  from {
+    opacity: 0;
+    transform: scale(0);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.admin-dashboard-animated > div:first-child {
+  animation: dashboardFadeDown 0.55s ease both;
+}
+
+.admin-dashboard-animated > div:nth-child(2) {
+  animation: dashboardFadeUp 0.55s ease both;
+  animation-delay: 0.08s;
+}
+
+.admin-dashboard-animated section:first-of-type article {
+  animation: dashboardScaleIn 0.6s ease both;
+}
+
+.admin-dashboard-animated section:first-of-type article:nth-child(1) {
+  animation-delay: 0.12s;
+}
+
+.admin-dashboard-animated section:first-of-type article:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.admin-dashboard-animated section:first-of-type article:nth-child(3) {
+  animation-delay: 0.28s;
+}
+
+.admin-dashboard-animated section:first-of-type article:nth-child(4) {
+  animation-delay: 0.36s;
+}
+
+.admin-dashboard-animated section:nth-of-type(2) article {
+  animation: dashboardFadeUp 0.65s ease both;
+}
+
+.admin-dashboard-animated section:nth-of-type(2) article:nth-child(1) {
+  animation-delay: 0.42s;
+}
+
+.admin-dashboard-animated section:nth-of-type(2) article:nth-child(2) {
+  animation-delay: 0.5s;
+}
+
+.admin-dashboard-animated section:nth-of-type(3) article {
+  animation: dashboardFadeUp 0.65s ease both;
+}
+
+.admin-dashboard-animated section:nth-of-type(3) article:nth-child(1) {
+  animation-delay: 0.58s;
+}
+
+.admin-dashboard-animated section:nth-of-type(3) article:nth-child(2) {
+  animation-delay: 0.66s;
+}
+
+.admin-dashboard-animated article {
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease,
+    border-color 0.25s ease;
+}
+
+.admin-dashboard-animated article:hover {
+  transform: translateY(-4px);
+  border-color: rgba(37, 99, 235, 0.22);
+  box-shadow: 0 18px 40px rgba(15, 33, 58, 0.1);
+}
+
+.admin-dashboard-animated button {
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.admin-dashboard-animated button:hover {
+  transform: translateY(-2px);
+}
+
+.admin-dashboard-animated svg polyline {
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 1000;
+  animation: dashboardDrawLine 1.35s ease forwards;
+  animation-delay: 0.55s;
+}
+
+.admin-dashboard-animated svg polygon {
+  transform-box: fill-box;
+  transform-origin: bottom;
+  animation: dashboardAreaIn 0.9s ease both;
+  animation-delay: 0.5s;
+}
+
+.admin-dashboard-animated svg circle[fill="#2563EB"] {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: dashboardDotPop 0.35s ease both;
+  animation-delay: 0.75s;
+}
+
+.admin-dashboard-animated table tbody tr {
+  animation: dashboardFadeUp 0.5s ease both;
+}
+
+.admin-dashboard-animated table tbody tr:nth-child(1) {
+  animation-delay: 0.7s;
+}
+
+.admin-dashboard-animated table tbody tr:nth-child(2) {
+  animation-delay: 0.78s;
+}
+
+.admin-dashboard-animated table tbody tr:nth-child(3) {
+  animation-delay: 0.86s;
+}
+
+.admin-dashboard-animated table tbody tr:nth-child(4) {
+  animation-delay: 0.94s;
+}
+
+.admin-dashboard-animated table tbody tr:nth-child(5) {
+  animation-delay: 1.02s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-dashboard-animated *,
+  .admin-dashboard-animated *::before,
+  .admin-dashboard-animated *::after {
+    animation: none !important;
+    transition: none !important;
+  }
 }
