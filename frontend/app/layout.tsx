@@ -10,9 +10,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "UNSAAC - Control de Asistencia Docente",
-  description: "Sistema biométrico de control de asistencia docente - UNSAAC",
-};
+L00S3RR/feat/backend
+  title: "Sistema de Control de Asistencia Biométrica - UNSAAC",
+  description: "Sistema web para el control de asistencia docente mediante tecnología biométrica en la UNSAAC.",
 
 export default function RootLayout({
   children,

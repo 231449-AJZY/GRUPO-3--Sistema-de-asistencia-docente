@@ -1,9 +1,4 @@
-import LoginPage from "./login/LoginPage";
-
-export const metadata = {
-  title: "UNSAAC · Control de Asistencia Docente | Iniciar Sesión",
-};
-
-export default function Page() {
-  return <LoginPage />;
+import { redirect } from "next/navigation";
+export default function HomePage() {
+  redirect("/login");
 }

@@ -1,0 +1,57 @@
+@import "tailwindcss";
+
+:root {
+  --background: #eef4fa;
+  --foreground: #0f213a;
+
+  --unsaac-primary: #061b34;
+  --unsaac-top: #0a2e52;
+  --unsaac-sidebar: #0d385f;
+  --unsaac-orange: #ff8a00;
+
+  --unsaac-bg: #eef4fa;
+  --unsaac-content: #fbfdff;
+  --unsaac-content-soft: #f4f7fb;
+  --unsaac-card: #ffffff;
+  --unsaac-border: #dfe7f1;
+
+  --unsaac-text: #0f213a;
+  --unsaac-muted: #52627a;
+
+  --unsaac-blue: #2563eb;
+  --unsaac-green: #16a34a;
+  --unsaac-yellow: #f59e0b;
+  --unsaac-red: #dc2626;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-unsaac-primary: var(--unsaac-primary);
+  --color-unsaac-top: var(--unsaac-top);
+  --color-unsaac-sidebar: var(--unsaac-sidebar);
+  --color-unsaac-orange: var(--unsaac-orange);
+  --color-unsaac-bg: var(--unsaac-bg);
+  --color-unsaac-content: var(--unsaac-content);
+  --color-unsaac-content-soft: var(--unsaac-content-soft);
+  --color-unsaac-card: var(--unsaac-card);
+  --color-unsaac-border: var(--unsaac-border);
+  --color-unsaac-text: var(--unsaac-text);
+  --color-unsaac-muted: var(--unsaac-muted);
+  --color-unsaac-blue: var(--unsaac-blue);
+  --color-unsaac-green: var(--unsaac-green);
+  --color-unsaac-yellow: var(--unsaac-yellow);
+  --color-unsaac-red: var(--unsaac-red);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+* { box-sizing: border-box; }
+html, body { min-height: 100%; }
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), Inter, Segoe UI, Arial, sans-serif;
+}
+button, input, select, textarea { font-family: inherit; }
+a { color: inherit; text-decoration: none; }
