@@ -9,19 +9,128 @@ interface UserData {
   rol: string;
 }
 
+interface DocenteStats {
+  total: string;
+  activos: string;
+  inactivos: string;
+}
+
+interface AsistenciaHoyStats {
+  puntuales: string;
+  tardanzas: string;
+  total_registros: string;
+}
+
+interface StatsData {
+  docentes: DocenteStats;
+  asistenciaHoy: AsistenciaHoyStats;
+}
+
+interface RegistroHoy {
+  nombres: string;
+  apellidos: string;
+  codigo: string;
+  departamento: string;
+  hora_registro: string;
+  estado: string;
+}
+
+interface AsistenciaHoyData {
+  fecha: string;
+  registros: RegistroHoy[];
+}
+
 export default function SupervisorDashboard() {
   const [user, setUser] = useState<UserData | null>(null);
+  const [stats, setStats] = useState<StatsData | null>(null);
+  const [asistenciaHoy, setAsistenciaHoy] = useState<AsistenciaHoyData | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user") || sessionStorage.getItem("user");
+    const token = localStorage.getItem("token") || sessionStorage.getItem("token");
+    
     if (storedUser) {
       try {
         setUser(JSON.parse(storedUser));
       } catch (e) {
-        console.error(e);
+        console.error("Error parsing user:", e);
       }
     }
+
+    if (token) {
+      const headers = { Authorization: `Bearer ${token}` };
+      
+      Promise.all([
+        fetch("/api/docentes/stats", { headers }).then((res) => res.json()),
+        fetch("/api/asistencia/hoy", { headers }).then((res) => res.json()),
+      ])
+        .then(([statsData, hoyData]) => {
+          setStats(statsData);
+          setAsistenciaHoy(hoyData);
+          setLoading(false);
+        })
+        .catch((err) => {
+          console.error("Error fetching supervisor data:", err);
+          setLoading(false);
+        });
+    } else {
+      setLoading(false);
+    }
   }, []);
+
+  // --- Procesamiento de Datos Reales ---
+  const totalDocentes = stats?.docentes ? parseInt(stats.docentes.total) : 0;
+  const totalActivos = stats?.docentes ? parseInt(stats.docentes.activos) : 0;
+  
+  const totalMarcacionesHoy = asistenciaHoy?.registros.length || 0;
+  const totalPuntualesHoy = asistenciaHoy?.registros.filter((r) => r.estado === "PUNTUAL").length || 0;
+  const totalTardanzasHoy = asistenciaHoy?.registros.filter((r) => r.estado === "TARDANZA").length || 0;
+  
+  const inasistenciasHoy = Math.max(0, totalActivos - totalMarcacionesHoy);
+  const percentAsistencia = totalActivos > 0 ? Math.round((totalMarcacionesHoy / totalActivos) * 100) : 0;
+
+  // --- Generación Dinámica del Gráfico de Marcaciones por Hora ---
+  const chartHours = [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17];
+  const hourlyCounts = chartHours.map((h) => {
+    const prefix = `${String(h).padStart(2, "0")}:`;
+    return asistenciaHoy?.registros.filter((r) => r.hora_registro.startsWith(prefix)).length || 0;
+  });
+
+  const maxCount = Math.max(...hourlyCounts, 1); // Evitar división por cero
+  
+  // Mapeo a coordenadas SVG (x de 40 a 480, y de 140 a 40)
+  const chartPoints = chartHours.map((h, i) => {
+    const x = 40 + (i * (440 / (chartHours.length - 1)));
+    const y = 140 - (hourlyCounts[i] * (100 / maxCount));
+    return { x, y, hour: `${String(h).padStart(2, "0")}:00`, count: hourlyCounts[i] };
+  });
+
+  let linePath = "";
+  let areaPath = "";
+  if (chartPoints.length > 0) {
+    linePath = `M ${chartPoints[0].x} ${chartPoints[0].y}`;
+    for (let i = 1; i < chartPoints.length; i++) {
+      linePath += ` L ${chartPoints[i].x} ${chartPoints[i].y}`;
+    }
+    areaPath = `${linePath} L ${chartPoints[chartPoints.length - 1].x} 140 L ${chartPoints[0].x} 140 Z`;
+  }
+
+  function formatTime(timeStr: string) {
+    if (!timeStr) return "";
+    return timeStr.slice(0, 8); // Mostrar HH:MM:SS
+  }
+
+  if (loading) {
+    return (
+      <div className={styles.dashboardContainer} style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "80vh", color: "#fff" }}>
+        <div style={{ textAlign: "center" }}>
+          <i className="fa-solid fa-circle-notch fa-spin fa-3x" style={{ color: "#f58025", marginBottom: "1rem" }}></i>
+          <p>Cargando información del supervisor...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.dashboardContainer}>
@@ -33,33 +142,33 @@ export default function SupervisorDashboard() {
 
       {/* Metric Cards Grid */}
       <div className={styles.metricGrid}>
-        {/* Card 1 */}
+        {/* Card 1: Asistencias en TR */}
         <div className={styles.metricCard}>
           <div className={styles.cardHeader}>
-            <span className={styles.cardTitle}>Asistencias en TR</span>
+            <span className={styles.cardTitle}>Marcaciones de Hoy</span>
             <div className={`${styles.cardIcon} ${styles.iconBlue}`}>
               <i className="fas fa-heartbeat"></i>
             </div>
           </div>
           <div className={styles.cardBody}>
-            <span className={styles.cardValue}>164</span>
+            <span className={styles.cardValue}>{totalMarcacionesHoy}</span>
             <span className={styles.cardSub}>
-              <span className={styles.trendUp}>+12%</span> frente a última hora
+              De los docentes activos hoy
             </span>
           </div>
         </div>
 
-        {/* Card 2 */}
+        {/* Card 2: Docentes Presentes */}
         <div className={styles.metricCard}>
           <div className={styles.cardHeader}>
-            <span className={styles.cardTitle}>Docentes Presentes</span>
+            <span className={styles.cardTitle}>Docentes Puntuales</span>
             <div className={`${styles.cardIcon} ${styles.iconGreen}`}>
               <i className="fas fa-user-check"></i>
             </div>
           </div>
           <div className={styles.cardBody}>
-            <span className={styles.cardValue}>128</span>
-            <span className={styles.cardSub}>68% de la programación</span>
+            <span className={styles.cardValue}>{totalPuntualesHoy}</span>
+            <span className={styles.cardSub}>{percentAsistencia}% de asistencia registrada</span>
             <div className={styles.sparklineWrapper}>
               <svg viewBox="0 0 100 30" width="100%" height="100%" preserveAspectRatio="none">
                 <path
@@ -77,17 +186,17 @@ export default function SupervisorDashboard() {
           </div>
         </div>
 
-        {/* Card 3 */}
+        {/* Card 3: Docentes Ausentes */}
         <div className={styles.metricCard}>
           <div className={styles.cardHeader}>
-            <span className={styles.cardTitle}>Docentes Ausentes</span>
+            <span className={styles.cardTitle}>Inasistencias</span>
             <div className={`${styles.cardIcon} ${styles.iconRed}`}>
               <i className="fas fa-user-times"></i>
             </div>
           </div>
           <div className={styles.cardBody}>
-            <span className={styles.cardValue}>16</span>
-            <span className={styles.cardSub}>8% del total general</span>
+            <span className={styles.cardValue}>{inasistenciasHoy}</span>
+            <span className={styles.cardSub}>Docentes sin marcación</span>
             <div className={styles.sparklineWrapper}>
               <svg viewBox="0 0 100 30" width="100%" height="100%" preserveAspectRatio="none">
                 <path
@@ -105,33 +214,33 @@ export default function SupervisorDashboard() {
           </div>
         </div>
 
-        {/* Card 4 */}
+        {/* Card 4: Tardanzas del día */}
         <div className={styles.metricCard}>
           <div className={styles.cardHeader}>
-            <span className={styles.cardTitle}>Tardanzas del día</span>
+            <span className={styles.cardTitle}>Tardanzas de Hoy</span>
             <div className={`${styles.cardIcon} ${styles.iconOrange}`}>
               <i className="fas fa-history"></i>
             </div>
           </div>
           <div className={styles.cardBody}>
-            <span className={styles.cardValue}>14</span>
+            <span className={styles.cardValue}>{totalTardanzasHoy}</span>
             <span className={styles.cardSub}>
-              Promedio: <span className={styles.trendDown}>9 min tarde</span>
+              Requieren seguimiento o justificación
             </span>
           </div>
         </div>
 
-        {/* Card 5 */}
+        {/* Card 5: Docentes Registrados */}
         <div className={styles.metricCard}>
           <div className={styles.cardHeader}>
-            <span className={styles.cardTitle}>Alertas Totales</span>
+            <span className={styles.cardTitle}>Total Docentes</span>
             <div className={`${styles.cardIcon} ${styles.iconRedShield}`}>
-              <i className="fas fa-exclamation-triangle"></i>
+              <i className="fas fa-users"></i>
             </div>
           </div>
           <div className={styles.cardBody}>
-            <span className={styles.cardValue}>09</span>
-            <span className={styles.cardSub}>5 pendientes · 4 atendidas</span>
+            <span className={styles.cardValue}>{totalDocentes}</span>
+            <span className={styles.cardSub}>{totalActivos} activos en el sistema</span>
           </div>
         </div>
       </div>
@@ -145,11 +254,6 @@ export default function SupervisorDashboard() {
               <i className="fas fa-chart-line" style={{ color: "#3b82f6" }}></i>
               Actividad diaria de marcaciones (En vivo)
             </span>
-            <select className={styles.dropdownSelect} defaultValue="hoy">
-              <option value="hoy">Hoy</option>
-              <option value="ayer">Ayer</option>
-              <option value="semana">Esta semana</option>
-            </select>
           </div>
           <div className={styles.chartContainer}>
             <svg viewBox="0 0 500 180" width="100%" height="100%">
@@ -160,35 +264,42 @@ export default function SupervisorDashboard() {
               <line x1="40" y1="140" x2="480" y2="140" stroke="#e2e8f0" strokeWidth="1.5" />
 
               {/* Chart Line Path */}
-              <path
-                d="M 40 140 C 90 140, 120 130, 160 80 C 200 30, 240 60, 280 40 C 320 20, 360 90, 400 120 C 440 145, 460 140, 480 140"
-                fill="none"
-                stroke="#3b82f6"
-                strokeWidth="3"
-              />
+              {linePath && (
+                <path
+                  d={linePath}
+                  fill="none"
+                  stroke="#3b82f6"
+                  strokeWidth="3"
+                />
+              )}
 
               {/* Area Path */}
-              <path
-                d="M 40 140 C 90 140, 120 130, 160 80 C 200 30, 240 60, 280 40 C 320 20, 360 90, 400 120 C 440 145, 460 140, 480 140 L 480 140 L 40 140 Z"
-                fill="url(#chartGrad)"
-                opacity="0.15"
-              />
+              {areaPath && (
+                <path
+                  d={areaPath}
+                  fill="url(#chartGrad)"
+                  opacity="0.15"
+                />
+              )}
 
-              {/* Peak Indicator Dot */}
-              <circle cx="280" cy="40" r="5" fill="#3b82f6" stroke="#ffffff" strokeWidth="2" />
+              {/* Indicator Dots */}
+              {chartPoints.map((pt, i) => (
+                <g key={i}>
+                  <circle cx={pt.x} cy={pt.y} r="4" fill="#3b82f6" stroke="#ffffff" strokeWidth="1.5" />
+                  <title>{`${pt.hour}: ${pt.count} marcaciones`}</title>
+                </g>
+              ))}
 
               {/* Time Indicators */}
-              <text x="40" y="160" fill="#94a3b8" fontSize="10" textAnchor="middle">07:00</text>
-              <text x="130" y="160" fill="#94a3b8" fontSize="10" textAnchor="middle">09:00</text>
-              <text x="220" y="160" fill="#94a3b8" fontSize="10" textAnchor="middle">11:00</text>
-              <text x="310" y="160" fill="#94a3b8" fontSize="10" textAnchor="middle">13:00</text>
-              <text x="400" y="160" fill="#94a3b8" fontSize="10" textAnchor="middle">15:00</text>
-              <text x="480" y="160" fill="#94a3b8" fontSize="10" textAnchor="middle">17:00</text>
+              {chartPoints.filter((_, idx) => idx % 2 === 0 || idx === chartPoints.length - 1).map((pt, i) => (
+                <text key={i} x={pt.x} y="160" fill="#94a3b8" fontSize="10" textAnchor="middle">
+                  {pt.hour}
+                </text>
+              ))}
 
               {/* Y Axis Values */}
-              <text x="30" y="24" fill="#94a3b8" fontSize="10" textAnchor="end">150</text>
-              <text x="30" y="64" fill="#94a3b8" fontSize="10" textAnchor="end">100</text>
-              <text x="30" y="104" fill="#94a3b8" fontSize="10" textAnchor="end">50</text>
+              <text x="30" y="24" fill="#94a3b8" fontSize="10" textAnchor="end">{maxCount}</text>
+              <text x="30" y="80" fill="#94a3b8" fontSize="10" textAnchor="end">{Math.round(maxCount / 2)}</text>
               <text x="30" y="144" fill="#94a3b8" fontSize="10" textAnchor="end">0</text>
 
               {/* Definitions */}
@@ -202,71 +313,57 @@ export default function SupervisorDashboard() {
           </div>
         </div>
 
-        {/* Alerts Section */}
+        {/* Alerts Section (Static template, since DB alerts are handled via triggers/notifs) */}
         <div className={styles.dashboardSection}>
           <div className={styles.sectionHeader}>
             <span className={styles.sectionTitle}>
               <i className="fas fa-bell" style={{ color: "#ef4444" }}></i>
               Alertas recientes
             </span>
-            <button className={styles.sectionAction}>Ver todas</button>
           </div>
           <div className={styles.alertList}>
-            {/* Alert 1 */}
-            <div className={styles.alertItem}>
-              <div className={`${styles.alertIcon} ${styles.iconOrange}`}>
-                <i className="fas fa-clock"></i>
-              </div>
-              <div className={styles.alertContent}>
-                <div className={styles.alertMeta}>
-                  <span className={styles.alertTitle}>Tardanza reiterada</span>
-                  <span className={styles.alertTime}>08:45</span>
+            {totalTardanzasHoy > 0 ? (
+              <div className={styles.alertItem}>
+                <div className={`${styles.alertIcon} ${styles.iconOrange}`}>
+                  <i className="fas fa-clock"></i>
                 </div>
-                <span className={styles.alertText}>Lic. Juan Carlos Arias Loayza</span>
+                <div className={styles.alertContent}>
+                  <div className={styles.alertMeta}>
+                    <span className={styles.alertTitle}>Tardanza detectada</span>
+                    <span className={styles.alertTime}>Hoy</span>
+                  </div>
+                  <span className={styles.alertText}>Existen {totalTardanzasHoy} docentes con retraso hoy.</span>
+                </div>
               </div>
-            </div>
+            ) : null}
 
-            {/* Alert 2 */}
-            <div className={styles.alertItem}>
-              <div className={`${styles.alertIcon} ${styles.iconRed}`}>
-                <i className="fas fa-user-slash"></i>
-              </div>
-              <div className={styles.alertContent}>
-                <div className={styles.alertMeta}>
-                  <span className={styles.alertTitle}>Inasistencia detectada</span>
-                  <span className={styles.alertTime}>09:15</span>
+            {inasistenciasHoy > 0 ? (
+              <div className={styles.alertItem}>
+                <div className={`${styles.alertIcon} ${styles.iconRed}`}>
+                  <i className="fas fa-user-slash"></i>
                 </div>
-                <span className={styles.alertText}>Dra. Eliana Cáceres Andia</span>
-              </div>
-            </div>
-
-            {/* Alert 3 */}
-            <div className={styles.alertItem}>
-              <div className={`${styles.alertIcon} ${styles.iconBlue}`}>
-                <i className="fas fa-calendar-times"></i>
-              </div>
-              <div className={styles.alertContent}>
-                <div className={styles.alertMeta}>
-                  <span className={styles.alertTitle}>Inconsistencia de horario</span>
-                  <span className={styles.alertTime}>09:32</span>
+                <div className={styles.alertContent}>
+                  <div className={styles.alertMeta}>
+                    <span className={styles.alertTitle}>Inasistencias detectadas</span>
+                    <span className={styles.alertTime}>Hoy</span>
+                  </div>
+                  <span className={styles.alertText}>Hay {inasistenciasHoy} docentes sin registrar ingreso hoy.</span>
                 </div>
-                <span className={styles.alertText}>Mg. Martha Paredes Zegarra</span>
               </div>
-            </div>
-
-            {/* Alert 4 */}
-            <div className={styles.alertItem}>
-              <div className={`${styles.alertIcon} ${styles.iconRed}`}>
-                <i className="fas fa-wifi-slash"></i>
-              </div>
-              <div className={styles.alertContent}>
-                <div className={styles.alertMeta}>
-                  <span className={styles.alertTitle}>Dispositivo sin respuesta</span>
-                  <span className={styles.alertTime}>10:01</span>
+            ) : (
+              <div className={styles.alertItem}>
+                <div className={`${styles.alertIcon} ${styles.iconBlue}`}>
+                  <i className="fas fa-check-double"></i>
                 </div>
-                <span className={styles.alertText}>Biométrico B-02 offline</span>
+                <div className={styles.alertContent}>
+                  <div className={styles.alertMeta}>
+                    <span className={styles.alertTitle}>Sistema Operativo</span>
+                    <span className={styles.alertTime}>OK</span>
+                  </div>
+                  <span className={styles.alertText}>Sin anomalías críticas registradas.</span>
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </div>
@@ -274,7 +371,7 @@ export default function SupervisorDashboard() {
       {/* Bottom Row: Table & Devices */}
       <div className={styles.bottomRow}>
         {/* Real-time activity table */}
-        <div className={styles.dashboardSection}>
+        <div className={styles.dashboardSection} style={{ flex: 2 }}>
           <div className={styles.sectionHeader}>
             <span className={styles.sectionTitle}>
               <i className="fas fa-list-ul" style={{ color: "#f58025" }}></i>
@@ -288,67 +385,47 @@ export default function SupervisorDashboard() {
                   <th>Docente</th>
                   <th>Hora</th>
                   <th>Estado</th>
-                  <th>Curso</th>
-                  <th>Aula</th>
+                  <th>Departamento</th>
                   <th>Método</th>
                 </tr>
               </thead>
               <tbody>
-                <tr>
-                  <td className={styles.docenteName}>Dr. Alberto Acosta Sullca</td>
-                  <td>10:22:14</td>
-                  <td>
-                    <span className={`${styles.statusBadge} ${styles.statusPresente}`}>
-                      Presente
-                    </span>
-                  </td>
-                  <td>Base de Datos II</td>
-                  <td>A-101</td>
-                  <td>Biométrico</td>
-                </tr>
-                <tr>
-                  <td className={styles.docenteName}>Mg. Verónica Holgado Canales</td>
-                  <td>10:21:48</td>
-                  <td>
-                    <span className={`${styles.statusBadge} ${styles.statusPresente}`}>
-                      Presente
-                    </span>
-                  </td>
-                  <td>Ingeniería Web</td>
-                  <td>B-205</td>
-                  <td>Biométrico</td>
-                </tr>
-                <tr>
-                  <td className={styles.docenteName}>Lic. Miguel A. Valdivia C.</td>
-                  <td>10:20:37</td>
-                  <td>
-                    <span className={`${styles.statusBadge} ${styles.statusTardanza}`}>
-                      Tardanza
-                    </span>
-                  </td>
-                  <td>Física I</td>
-                  <td>C-303</td>
-                  <td>Biométrico</td>
-                </tr>
-                <tr>
-                  <td className={styles.docenteName}>Dra. Nelly P. Jiménez Chino</td>
-                  <td>10:19:58</td>
-                  <td>
-                    <span className={`${styles.statusBadge} ${styles.statusAusente}`}>
-                      Ausente
-                    </span>
-                  </td>
-                  <td>Química General</td>
-                  <td>A-102</td>
-                  <td>Sin registro</td>
-                </tr>
+                {(!asistenciaHoy?.registros || asistenciaHoy.registros.length === 0) ? (
+                  <tr>
+                    <td colSpan={5} style={{ textAlign: "center", padding: "2rem", color: "rgba(255,255,255,0.4)" }}>
+                      No se registran marcaciones de ingreso el día de hoy.
+                    </td>
+                  </tr>
+                ) : (
+                  asistenciaHoy.registros.map((r, idx) => (
+                    <tr key={idx}>
+                      <td className={styles.docenteName}>{`${r.nombres} ${r.apellidos}`}</td>
+                      <td>{formatTime(r.hora_registro)}</td>
+                      <td>
+                        <span
+                          className={`${styles.statusBadge} ${
+                            r.estado === "PUNTUAL"
+                              ? styles.statusPresente
+                              : r.estado === "TARDANZA"
+                              ? styles.statusTardanza
+                              : styles.statusAusente
+                          }`}
+                        >
+                          {r.estado === "PUNTUAL" ? "Presente" : r.estado}
+                        </span>
+                      </td>
+                      <td>{r.departamento}</td>
+                      <td>Biométrico</td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
         </div>
 
         {/* Biometric Status Section */}
-        <div className={styles.dashboardSection}>
+        <div className={styles.dashboardSection} style={{ flex: 1 }}>
           <div className={styles.sectionHeader}>
             <span className={styles.sectionTitle}>
               <i className="fas fa-fingerprint" style={{ color: "#22c55e" }}></i>
@@ -356,36 +433,23 @@ export default function SupervisorDashboard() {
             </span>
           </div>
           <div className={styles.deviceList}>
-            {/* Device 1 */}
             <div className={styles.deviceCard}>
               <div className={styles.deviceInfo}>
-                <span className={styles.deviceName}>Biométrico A-01</span>
-                <span className={styles.deviceSync}>Sincronizado: 10:24</span>
+                <span className={styles.deviceName}>Biométrico Entrada Principal</span>
+                <span className={styles.deviceSync}>Estado: Activo</span>
               </div>
               <span className={`${styles.deviceStatus} ${styles.deviceOnline}`}>
                 <span className={styles.statusDot}></span> En línea
               </span>
             </div>
 
-            {/* Device 2 */}
             <div className={styles.deviceCard}>
               <div className={styles.deviceInfo}>
-                <span className={styles.deviceName}>Biométrico B-01</span>
-                <span className={styles.deviceSync}>Sincronizado: 10:22</span>
+                <span className={styles.deviceName}>Biométrico Pabellón Sistemas</span>
+                <span className={styles.deviceSync}>Estado: Activo</span>
               </div>
               <span className={`${styles.deviceStatus} ${styles.deviceOnline}`}>
                 <span className={styles.statusDot}></span> Estable
-              </span>
-            </div>
-
-            {/* Device 3 */}
-            <div className={`${styles.deviceCard} ${styles.deviceCardAlert}`}>
-              <div className={styles.deviceInfo}>
-                <span className={styles.deviceName}>Biométrico C-03</span>
-                <span className={styles.deviceSync}>Sincronizado: 10:17</span>
-              </div>
-              <span className={`${styles.deviceStatus} ${styles.deviceWarning}`}>
-                <span className={styles.statusDot}></span> Atención
               </span>
             </div>
           </div>

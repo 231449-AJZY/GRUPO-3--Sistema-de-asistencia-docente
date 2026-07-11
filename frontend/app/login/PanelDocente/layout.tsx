@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import styles from "./layout.module.css";
 
 interface UserData {
@@ -13,6 +13,7 @@ interface UserData {
 
 export default function DocenteLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
+  const pathname = usePathname();
   const [user, setUser] = useState<UserData | null>(null);
   const [currentTime, setCurrentTime] = useState("");
   const [currentDate, setCurrentDate] = useState("");
@@ -75,14 +76,14 @@ export default function DocenteLayout({ children }: { children: React.ReactNode 
         </div>
 
         <nav className={styles.navMenu}>
-          <Link href="/login/PanelDocente" className={`${styles.navItem} ${styles.active}`}>
+          <Link href="/login/PanelDocente" className={`${styles.navItem} ${pathname === "/login/PanelDocente" ? styles.active : ""}`}>
             <i className="fas fa-home"></i>
             <span>Inicio</span>
           </Link>
-          <a href="#" className={styles.navItem} onClick={(e) => e.preventDefault()}>
+          <Link href="/login/PanelDocente/asistencia" className={`${styles.navItem} ${pathname.startsWith("/login/PanelDocente/asistencia") ? styles.active : ""}`}>
             <i className="fas fa-chart-bar"></i>
             <span>Mi asistencia</span>
-          </a>
+          </Link>
           <a href="#" className={styles.navItem} onClick={(e) => e.preventDefault()}>
             <i className="fas fa-calendar-alt"></i>
             <span>Mis horarios</span>

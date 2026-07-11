@@ -43,9 +43,9 @@ export async function mockLogin({
 }
 
 export function getDashboardPathByRole(role: UserRole): string {
-  if (role === "ADMINISTRADOR") return "/admin/dashboard";
-  if (role === "DOCENTE")       return "/docente/dashboard";
-  return "/supervisor/dashboard";
+  if (role === "ADMINISTRADOR") return "/Admin/dashboard";
+  if (role === "DOCENTE")       return "/login/PanelDocente";
+  return "/login/PanelSupervisor";
 }
 
 export function saveSession(user: UsuarioActivo, token: string) {
