@@ -148,4 +148,71 @@ router.post('/', autenticar, soloRol('Administrador'), async (req, res) => {
   }
 });
 
+// PUT /api/docentes/:id — editar datos del docente
+router.put('/:id', autenticar, soloRol('Administrador'), async (req, res) => {
+  const { nombres, apellidos, dni, telefono, categoria, condicion, departamento } = req.body;
+  try {
+    // Actualizar usuario
+    await pool.query(
+      `UPDATE usuarios SET nombres = $1, apellidos = $2 WHERE id = (
+         SELECT usuario_id FROM docentes WHERE id = $3
+       )`,
+      [nombres, apellidos, req.params.id]
+    );
+
+    // Buscar departamento si se envió
+    let deptId = null;
+    if (departamento) {
+      const dept = await pool.query(
+        `SELECT id FROM departamentos_academicos WHERE nombre = $1`, [departamento]
+      );
+      if (dept.rows.length > 0) deptId = dept.rows[0].id;
+    }
+
+    // Actualizar docente
+    const updateFields = [];
+    const values = [];
+    let idx = 1;
+
+    if (dni)       { updateFields.push(`dni = $${idx++}`);       values.push(dni); }
+    if (telefono)  { updateFields.push(`telefono = $${idx++}`);  values.push(telefono); }
+    if (categoria) { updateFields.push(`categoria = $${idx++}`); values.push(categoria); }
+    if (condicion) { updateFields.push(`condicion = $${idx++}`); values.push(condicion); }
+    if (deptId)    { updateFields.push(`departamento_id = $${idx++}`); values.push(deptId); }
+
+    if (updateFields.length > 0) {
+      values.push(req.params.id);
+      await pool.query(
+        `UPDATE docentes SET ${updateFields.join(', ')} WHERE id = $${idx}`,
+        values
+      );
+    }
+
+    res.json({ mensaje: 'Docente actualizado correctamente' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+// PUT /api/docentes/:id/estado — activar o desactivar docente
+router.put('/:id/estado', autenticar, soloRol('Administrador'), async (req, res) => {
+  const { activo } = req.body;
+  if (activo === undefined)
+    return res.status(400).json({ error: 'activo es requerido (true/false)' });
+
+  try {
+    await pool.query(
+      `UPDATE usuarios SET activo = $1 WHERE id = (
+         SELECT usuario_id FROM docentes WHERE id = $2
+       )`,
+      [activo, req.params.id]
+    );
+    res.json({ mensaje: `Docente ${activo ? 'activado' : 'desactivado'} correctamente` });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
 module.exports = router;
