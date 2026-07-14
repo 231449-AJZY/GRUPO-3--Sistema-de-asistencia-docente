@@ -141,4 +141,106 @@ router.get('/admin', autenticar, soloRol('Administrador'), async (req, res) => {
   }
 });
 
+// GET /api/dashboard/supervisor
+router.get('/supervisor', autenticar, soloRol('Supervisor', 'Administrador'), async (req, res) => {
+  try {
+    const totalDocentes = await pool.query(
+      `SELECT COUNT(*) AS total FROM docentes d
+       JOIN usuarios u ON u.id = d.usuario_id WHERE u.activo = true`
+    );
+
+    const asistenciaHoy = await pool.query(
+      `SELECT
+        COUNT(*) FILTER (WHERE estado = 'PUNTUAL')   AS puntuales,
+        COUNT(*) FILTER (WHERE estado = 'TARDANZA')  AS tardanzas,
+        COUNT(*)                                      AS total
+       FROM registros_ingreso_institucional
+       WHERE fecha = CURRENT_DATE`
+    );
+
+    const alertas = await pool.query(
+      `SELECT COUNT(*) AS total FROM alertas WHERE leida = false`
+    );
+
+    const registrosHoy = await pool.query(
+      `SELECT
+        u.nombres || ' ' || u.apellidos AS docente,
+        r.hora_registro, r.estado
+       FROM registros_ingreso_institucional r
+       JOIN docentes d ON d.id = r.docente_id
+       JOIN usuarios u ON u.id = d.usuario_id
+       WHERE r.fecha = CURRENT_DATE
+       ORDER BY r.hora_registro DESC
+       LIMIT 10`
+    );
+
+    const total    = parseInt(totalDocentes.rows[0].total);
+    const asistio  = parseInt(asistenciaHoy.rows[0].total);
+
+    res.json({
+      stats: {
+        docentesMonitoreados: total,
+        alertasNuevas:        parseInt(alertas.rows[0].total),
+        inconsistencias:      total - asistio < 0 ? 0 : total - asistio,
+        registrosValidados:   asistio,
+      },
+      registrosHoy: registrosHoy.rows
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+// GET /api/dashboard/docente
+router.get('/docente', autenticar, soloRol('Docente'), async (req, res) => {
+  try {
+    // Buscar el perfil del docente desde el token
+    const docente = await pool.query(
+      `SELECT d.id FROM docentes d WHERE d.usuario_id = $1`,
+      [req.user.id]
+    );
+
+    if (docente.rows.length === 0)
+      return res.status(404).json({ error: 'Perfil de docente no encontrado' });
+
+    const docenteId = docente.rows[0].id;
+
+    // Estadísticas del mes actual
+    const stats = await pool.query(
+      `SELECT
+        COUNT(*) FILTER (WHERE estado = 'PUNTUAL')   AS asistencias,
+        COUNT(*) FILTER (WHERE estado = 'TARDANZA')  AS tardanzas,
+        COUNT(*) FILTER (WHERE estado = 'AUSENTE')   AS inasistencias
+       FROM registros_ingreso_institucional
+       WHERE docente_id = $1
+         AND DATE_TRUNC('month', fecha) = DATE_TRUNC('month', CURRENT_DATE)`,
+      [docenteId]
+    );
+
+    // Últimos 5 registros
+    const historial = await pool.query(
+      `SELECT fecha, hora_registro, estado
+       FROM registros_ingreso_institucional
+       WHERE docente_id = $1
+       ORDER BY fecha DESC
+       LIMIT 5`,
+      [docenteId]
+    );
+
+    res.json({
+      stats: {
+        asistencias:   parseInt(stats.rows[0].asistencias),
+        tardanzas:     parseInt(stats.rows[0].tardanzas),
+        inasistencias: parseInt(stats.rows[0].inasistencias),
+      },
+      historial: historial.rows
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
 module.exports = router;
+
