@@ -27,9 +27,9 @@ export interface LoginMessage {
 // ── Constantes ─────────────────────────────────────────────────────────────
 
 const ROLE_ROUTES: Record<string, string> = {
-  Administrador: "/dashboard/admin",
-  Docente:       "/dashboard/docente",
-  Supervisor:    "/dashboard/supervisor",
+  Administrador: "/login/PanelAdmin",
+  Docente:       "/login/PanelDocente",
+  Supervisor:    "/login/PanelSupervisor",
 };
 
 const DEFAULT_MESSAGE: LoginMessage = {
