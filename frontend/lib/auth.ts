@@ -51,9 +51,20 @@ export function getDashboardPathByRole(role: UserRole): string {
 export function saveSession(user: UsuarioActivo, token: string) {
   localStorage.setItem("unsaac_user",  JSON.stringify(user));
   localStorage.setItem("unsaac_token", token);
+  // También guardar con las claves que usa andy
+  localStorage.setItem("user",  JSON.stringify({
+    id:       user.id,
+    nombres:  user.nombre.split(" ")[0],
+    apellidos: user.nombre.split(" ").slice(1).join(" "),
+    correo:   user.correo,
+    rol:      user.rol,
+  }));
+  localStorage.setItem("token", token);
 }
 
 export function clearSession() {
   localStorage.removeItem("unsaac_user");
   localStorage.removeItem("unsaac_token");
+  localStorage.removeItem("user");
+  localStorage.removeItem("token");
 }

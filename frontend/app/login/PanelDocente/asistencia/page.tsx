@@ -91,7 +91,7 @@ export default function AsistenciaPanel() {
       : 100;
 
   // Última marcación
-  const todasLasMarcaciones = [];
+  const todasLasMarcaciones: Array<{fecha: string; hora: string; tipo: string; resultado: string; dependencia?: string; obs?: string; curso?: string; aula?: string}> = [];
   if (asistenciaData) {
     asistenciaData.ingresos.forEach((r) => {
       todasLasMarcaciones.push({

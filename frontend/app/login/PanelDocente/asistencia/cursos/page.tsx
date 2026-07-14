@@ -262,7 +262,7 @@ export default function AsistenciaCursos() {
               </div>
             </div>
 
-            <div className={styles.alertBox} className={`${styles.alertBox} ${styles.alertBlue}`} style={{ width: "100%", marginTop: "1rem" }}>
+            <div className={`${styles.alertBox} ${styles.alertBlue}`} style={{ width: "100%", marginTop: "1rem" }}>
               <i className="fas fa-shield-alt"></i>
               <span>Acerque su huella al sensor y manténgala por 2 segundos.</span>
             </div>
@@ -331,13 +331,13 @@ export default function AsistenciaCursos() {
           </div>
           <div className={styles.panelBody}>
             <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-              <div className={styles.alertBox} className={`${styles.alertBox} ${styles.alertBlue}`} style={{ borderLeft: "4px solid #10b981", color: "#15803d", backgroundColor: "#f0fdf4" }}>
+              <div className={`${styles.alertBox} ${styles.alertBlue}`} style={{ borderLeft: "4px solid #10b981", color: "#15803d", backgroundColor: "#f0fdf4" }}>
                 <div><strong>PRESENTE:</strong> Marcación dentro del horario y del margen de tolerancia.</div>
               </div>
-              <div className={styles.alertBox} className={`${styles.alertBox} ${styles.alertBlue}`} style={{ borderLeft: "4px solid #f59e0b", color: "#b45309", backgroundColor: "#fffbeb" }}>
+              <div className={`${styles.alertBox} ${styles.alertBlue}`} style={{ borderLeft: "4px solid #f59e0b", color: "#b45309", backgroundColor: "#fffbeb" }}>
                 <div><strong>TARDANZA:</strong> Marcación posterior al inicio, pero dentro de tolerancia.</div>
               </div>
-              <div className={styles.alertBox} className={`${styles.alertBox} ${styles.alertBlue}`} style={{ borderLeft: "4px solid #ef4444", color: "#b91c1c", backgroundColor: "#fef2f2" }}>
+              <div className={`${styles.alertBox} ${styles.alertBlue}`} style={{ borderLeft: "4px solid #ef4444", color: "#b91c1c", backgroundColor: "#fef2f2" }}>
                 <div><strong>FUERA DE HORA:</strong> Marcación fuera del margen permitido por la UNSAAC.</div>
               </div>
             </div>

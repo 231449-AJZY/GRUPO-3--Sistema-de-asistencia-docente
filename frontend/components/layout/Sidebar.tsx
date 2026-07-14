@@ -16,23 +16,23 @@ interface MenuItem {
 
 const menuByRole: Record<UserRole, MenuItem[]> = {
   ADMINISTRADOR: [
-    { label: "Dashboard", key: "dashboard", href: "/admin/dashboard" },
-    { label: "Docentes", key: "docentes", href: "/admin/docentes" },
-    { label: "Biometría", key: "biometria", href: "/admin/biometria" },
-    { label: "Usuarios", key: "usuarios", href: "/admin/usuarios" },
-    { label: "Roles", key: "roles", href: "/admin/roles" },
+    { label: "Dashboard", key: "dashboard", href: "/Admin/dashboard" },
+    { label: "Docentes", key: "docentes", href: "/Admin/docentes" },
+    { label: "Biometría", key: "biometria", href: "/Admin/biometria" },
+    { label: "Usuarios", key: "usuarios", href: "/Admin/usuarios" },
+    { label: "Roles", key: "roles", href: "/Admin/roles" },
     {
       label: "Configuración",
       key: "configuracion",
-      href: "/admin/configuracion",
+      href: "/Admin/configuracion",
     },
   ],
 
   DOCENTE: [
-    { label: "Dashboard", key: "dashboard", href: "/docente/dashboard" },
-    { label: "Ingreso institucional", key: "ingreso", href: "/docente/ingreso" },
-    { label: "Asistencia a cursos", key: "asistencia", href: "/docente/asistencia" },
-    { label: "Historial", key: "historial", href: "/docente/historial" },
+    { label: "Dashboard", key: "dashboard", href: "/login/PanelDocente" },
+    { label: "Ingreso institucional", key: "ingreso", href: "/login/PanelDocente/asistencia/ingreso" },
+    { label: "Asistencia a cursos", key: "asistencia", href: "/login/PanelDocente/asistencia" },
+    { label: "Historial", key: "historial", href: "/login/PanelDocente/asistencia/historial" },
     { label: "Tardanzas", key: "tardanzas", href: "/docente/tardanzas" },
     { label: "Inasistencias", key: "inasistencias", href: "/docente/inasistencias" },
     { label: "Calendario", key: "calendario", href: "/docente/calendario" },
@@ -40,7 +40,7 @@ const menuByRole: Record<UserRole, MenuItem[]> = {
   ],
 
   SUPERVISOR: [
-    { label: "Dashboard", key: "dashboard", href: "/supervisor/dashboard" },
+    { label: "Dashboard", key: "dashboard", href: "/login/PanelSupervisor" },
     { label: "Tiempo real", key: "monitoreo", href: "/supervisor/monitoreo" },
     {
       label: "Inconsistencias",
