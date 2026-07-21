@@ -18,6 +18,8 @@ export default function DocenteLayout({ children }: { children: React.ReactNode 
   const [currentTime, setCurrentTime] = useState("");
   const [currentDate, setCurrentDate] = useState("");
 
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
   useEffect(() => {
     // Cargar datos de usuario desde el almacenamiento
     const storedUser = localStorage.getItem("user") || sessionStorage.getItem("user");
@@ -50,6 +52,13 @@ export default function DocenteLayout({ children }: { children: React.ReactNode 
     const interval = setInterval(updateDateTime, 1000);
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    if (!isDropdownOpen) return;
+    const closeDropdown = () => setIsDropdownOpen(false);
+    document.addEventListener("click", closeDropdown);
+    return () => document.removeEventListener("click", closeDropdown);
+  }, [isDropdownOpen]);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -142,7 +151,7 @@ export default function DocenteLayout({ children }: { children: React.ReactNode 
               </div>
             </div>
 
-            <div className={styles.userProfile}>
+            <div className={styles.userProfile} onClick={(e) => { e.stopPropagation(); setIsDropdownOpen(!isDropdownOpen); }} title="Opciones de usuario">
               <div className={styles.avatar}>
                 <i className="fas fa-user-tie"></i>
               </div>
@@ -150,9 +159,51 @@ export default function DocenteLayout({ children }: { children: React.ReactNode 
                 <span className={styles.userRole}>Docente</span>
                 <span className={styles.userName}>{docenteName}</span>
               </div>
-              <button className={styles.logoutBtn} onClick={handleLogout} title="Cerrar Sesión">
+              <button className={`${styles.logoutBtn} ${isDropdownOpen ? styles.rotated : ""}`}>
                 <i className="fas fa-chevron-down"></i>
               </button>
+
+              {isDropdownOpen && (
+                <div className={styles.dropdownMenu} onClick={(e) => e.stopPropagation()}>
+                  <div className={styles.dropdownUser}>
+                    <div className={styles.dropdownRol}>
+                      <span>DC</span>
+                    </div>
+                    <div className={styles.dropdownUserID}>
+                      <span style={{ fontWeight: 'bold' , fontSize: '15px' , color: 'black' }}>Docente</span>
+                      <br></br>
+                      <span>Docente de escuela profesional</span>
+                      <br></br>
+                      <span>usuario</span>
+                    </div>
+                  </div>
+
+                  <Link href="/login/PanelDocente/perfil" className={styles.dropdownItem}>
+                    <i className="fas fa-user"></i>
+                    <span>Mi Perfil</span>
+                  </Link>
+                  <a href="#" className={styles.dropdownItem} onClick={(e) => { e.preventDefault(); alert("Configuración no disponible"); }}>
+                    <i className="fas fa-cog"></i>
+                    <span>Configuración de cuenta</span>
+                  </a>
+                  <a href="#" className={styles.dropdownItem} onClick={(e) => { e.preventDefault(); alert("Configuración no disponible"); }}>
+                    <i className="fas fa-lock"></i>
+                    <span>Cambiar contraseña</span>
+                  </a>
+                  <a href="#" className={styles.dropdownItem} onClick={(e) => { e.preventDefault(); alert("Configuración no disponible"); }}>
+                    <i className="fas fa-sliders-h"></i>
+                    <span>Preferencias</span>
+                  </a>
+                  <a href="#" className={styles.dropdownItem} onClick={(e) => { e.preventDefault(); alert("Configuración no disponible"); }}>
+                    <i className="fas fa-question-circle"></i>
+                    <span>Ayuda / Soporte</span>
+                  </a>
+                  <button className={`${styles.dropdownItem} ${styles.logout}`} onClick={handleLogout}>
+                    <i className="fas fa-sign-out-alt"></i>
+                    <span>Cerrar Sesión</span>
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </header>

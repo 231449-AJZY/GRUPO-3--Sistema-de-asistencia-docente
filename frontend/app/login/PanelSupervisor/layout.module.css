@@ -249,6 +249,8 @@
   gap: 12px;
   padding-left: 20px;
   border-left: 1px solid rgba(255, 255, 255, 0.15);
+  position: relative;
+  cursor: pointer;
 }
 
 .avatar {
@@ -293,12 +295,109 @@
   color: rgba(255, 255, 255, 0.4);
   cursor: pointer;
   padding: 4px;
-  transition: color 0.2s;
+  transition: all 0.2s ease;
   font-size: 0.8rem;
+}
+
+.logoutBtn.rotated {
+  transform: rotate(180deg);
+  color: #fff;
 }
 
 .logoutBtn:hover {
   color: #fff;
+}
+
+.dropdownMenu {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  background-color: whitesmoke;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  width: 240px;
+  display: flex;
+  flex-direction: column;
+  padding: 0.5rem 0;
+  z-index: 1000;
+  animation: fadeIn 0.15s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dropdownUser{
+  display:flex;
+  justify-content:left;
+  align-items:center;
+  color:black;
+  padding: 1rem 1rem;
+  gap:10px;
+}
+
+.dropdownRol{
+  border-radius: 100px;
+  background-color: #10066c;
+  padding: 10px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: white;
+}
+
+.dropdownUserID{
+  font-size: 0.8rem;
+  color: #6d6c6b;
+}
+
+
+.dropdownItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0.6rem 1rem;
+  color: black;
+  text-decoration: none;
+  font-size: 0.85rem;
+  background: transparent;
+  border: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.dropdownItem:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  color: #6d6c6b;
+}
+
+.dropdownItem i {
+  width: 16px;
+  text-align: center;
+}
+
+.dropdownItem.logout {
+  color: rgb(212, 6, 6);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  margin-top: 0.25rem;
+  padding-top: 0.6rem;
+}
+
+.dropdownItem.logout:hover {
+  background-color: rgba(241, 52, 52, 0.1);
+  color: rgb(210, 83, 83);
 }
 
 /* Content Area */
