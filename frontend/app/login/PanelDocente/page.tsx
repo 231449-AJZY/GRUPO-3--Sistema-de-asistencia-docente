@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import styles from "./page.module.css";
+import Card, { CardContent, CardHeader } from "@/components/ui/Card";
+import Badge from "@/components/ui/Badge";
+import Button from "@/components/ui/Button";
 
 interface UserData {
   id: number;
@@ -69,9 +71,9 @@ export default function DocenteDashboard() {
     }
   }, []);
 
-  const docenteName = user ? `${user.nombres} ${user.apellidos}` : "Mg. Verónica Holgado Canales";
+  const docenteName = user ? `${user.nombres} ${user.apellidos}` : "Docente Universitario";
 
-  // --- Procesamiento de Datos de Asistencia en Tiempo Real ---
+  // --- Data Processing ---
   const todayStr = new Date().toISOString().split("T")[0];
   const todayIngreso = asistenciaData?.ingresos.find(
     (r) => r.fecha.split("T")[0] === todayStr
@@ -81,7 +83,7 @@ export default function DocenteDashboard() {
   const ingresoTime = todayIngreso ? todayIngreso.hora_registro.slice(0, 5) : "";
   const ingresoEstado = todayIngreso ? todayIngreso.estado : "PENDIENTE";
 
-  // Tardanzas acumuladas
+  // Tardanzas
   const tardanzasIngresos = asistenciaData?.ingresos.filter((r) => r.estado === "TARDANZA") || [];
   const tardanzasCursos = asistenciaData?.cursos.filter((r) => r.estado === "TARDANZA") || [];
   const totalTardanzas = tardanzasIngresos.length + tardanzasCursos.length;
@@ -93,7 +95,7 @@ export default function DocenteDashboard() {
     ? formatDate(todasLasTardanzas[0].fecha) 
     : "—";
 
-  // Inasistencias acumuladas
+  // Inasistencias
   const ausenciasIngresos = asistenciaData?.ingresos.filter((r) => r.estado === "AUSENTE") || [];
   const ausenciasCursos = asistenciaData?.cursos.filter((r) => r.estado === "AUSENTE") || [];
   const totalAusencias = ausenciasIngresos.length + ausenciasCursos.length;
@@ -158,320 +160,331 @@ export default function DocenteDashboard() {
 
   if (loading) {
     return (
-      <div className={styles.dashboardContainer} style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "80vh", color: "#fff" }}>
-        <div style={{ textAlign: "center" }}>
-          <i className="fa-solid fa-circle-notch fa-spin fa-3x" style={{ color: "#f58025", marginBottom: "1rem" }}></i>
-          <p>Cargando información del docente...</p>
-        </div>
+      <div className="flex min-h-[60vh] flex-col items-center justify-center">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-unsaac-orange/30 border-t-unsaac-orange" />
+        <p className="mt-4 text-sm font-bold text-unsaac-muted">Cargando información del docente...</p>
       </div>
     );
   }
 
   return (
-    <div className={styles.dashboardContainer}>
-      {/* Sección de Bienvenida */}
-      <section className={styles.welcomeSection}>
-        <h1>Dashboard del docente</h1>
-        <p>Bienvenida, {docenteName} · Resumen de asistencia y actividad académica</p>
+    <div className="admin-dashboard-animated space-y-6">
+      {/* Title Section */}
+      <div>
+        <h1 className="text-[34px] font-extrabold leading-tight text-unsaac-text">
+          Panel principal del docente
+        </h1>
+        <p className="mt-1 text-base font-semibold text-unsaac-muted">
+          Bienvenida, {docenteName} · Resumen de asistencia y actividad académica
+        </p>
+      </div>
+
+      {/* Metrics Grid */}
+      <section className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
+        
+        {/* Metric 1: Estado */}
+        <Card className="overflow-hidden flex flex-col justify-between h-full p-6">
+          <div className="flex items-start gap-4">
+            <div className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-full ${isPresent ? "bg-green-50 text-green-600 border border-green-100" : "bg-amber-50 text-amber-500 border border-amber-100"}`}>
+              <DashboardIcon name={isPresent ? "check-circle" : "clock"} className="h-6 w-6" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <h3 className="text-sm font-extrabold text-unsaac-muted truncate">
+                Estado de asistencia hoy
+              </h3>
+              <p className={`mt-1 text-2xl font-black leading-none ${isPresent ? "text-green-600" : "text-amber-500"}`}>
+                {isPresent ? "Presente" : "Sin registro"}
+              </p>
+              <p className="mt-1 text-xs font-bold text-unsaac-muted">
+                {isPresent ? `Ingreso a las ${ingresoTime}` : "No se detecta marcación hoy"}
+              </p>
+            </div>
+          </div>
+          <div className="mt-4 border-t border-slate-100 pt-3">
+             <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-extrabold tracking-wide uppercase ${ingresoEstado === "PUNTUAL" ? "bg-green-100 text-green-700" : ingresoEstado === "TARDANZA" ? "bg-amber-100 text-amber-700" : "bg-slate-100 text-slate-600"}`}>
+               {ingresoEstado}
+             </span>
+          </div>
+        </Card>
+
+        {/* Metric 2: Próximo curso */}
+        <Card className="overflow-hidden flex flex-col justify-between h-full p-6">
+          <div className="flex items-start gap-4">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-600 border border-blue-100">
+              <DashboardIcon name="calendar" className="h-6 w-6" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <h3 className="text-sm font-extrabold text-unsaac-muted truncate">
+                Próximo curso asignado
+              </h3>
+              <p className="mt-1 text-2xl font-black leading-none text-blue-600 truncate">
+                Base de Datos II
+              </p>
+              <p className="mt-1 text-xs font-bold text-unsaac-muted truncate">
+                Aula LAB-02 · 10:00 a 12:00
+              </p>
+            </div>
+          </div>
+          <div className="mt-4 border-t border-slate-100 pt-3">
+             <span className="inline-flex rounded-full px-2 py-0.5 text-[10px] font-extrabold tracking-wide uppercase bg-blue-100 text-blue-700">
+               Hoy · Ingeniería de Sistemas
+             </span>
+          </div>
+        </Card>
+
+        {/* Metric 3: Tardanzas */}
+        <Card className="overflow-hidden flex flex-col justify-between h-full p-6">
+          <div className="flex items-start gap-4">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-amber-50 text-amber-500 border border-amber-100">
+              <DashboardIcon name="clock-alert" className="h-6 w-6" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <h3 className="text-sm font-extrabold text-unsaac-muted truncate">
+                Tardanzas acumuladas
+              </h3>
+              <p className="mt-1 text-3xl font-black leading-none text-amber-500">
+                {formatNumber(totalTardanzas)}
+              </p>
+              <p className="mt-1 text-xs font-bold text-unsaac-muted">
+                Total en el período actual
+              </p>
+            </div>
+          </div>
+          <div className="mt-4 -mx-6 -mb-6">
+            <MiniTrend values={[1, 2, 1, 0, totalTardanzas]} colorHex="#F59E0B" />
+          </div>
+        </Card>
+
+        {/* Metric 4: Inasistencias */}
+        <Card className="overflow-hidden flex flex-col justify-between h-full p-6">
+          <div className="flex items-start gap-4">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-red-50 text-red-600 border border-red-100">
+              <DashboardIcon name="alert-triangle" className="h-6 w-6" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <h3 className="text-sm font-extrabold text-unsaac-muted truncate">
+                Inasistencias acumuladas
+              </h3>
+              <p className="mt-1 text-3xl font-black leading-none text-red-600">
+                {formatNumber(totalAusencias)}
+              </p>
+              <p className="mt-1 text-xs font-bold text-unsaac-muted">
+                Sin justificar en el sistema
+              </p>
+            </div>
+          </div>
+          <div className="mt-4 -mx-6 -mb-6">
+            <MiniTrend values={[0, 0, 1, 0, totalAusencias]} colorHex="#DC2626" />
+          </div>
+        </Card>
+
       </section>
 
-      {/* Tarjetas de Métricas Superiores */}
-      <section className={styles.metricsGrid}>
-        {/* Tarjeta 1: Asistencia */}
-        <div className={styles.metricCard}>
-          <div className={`${styles.iconWrapper} ${isPresent ? styles.iconGreen : styles.iconOrange}`}>
-            <i className={`fa-solid ${isPresent ? "fa-circle-check" : "fa-clock"}`}></i>
-          </div>
-          <div className={styles.metricContent}>
-            <span className={styles.metricLabel}>Estado de asistencia del día</span>
-            <span className={`${styles.metricValue} ${isPresent ? styles.textGreen : styles.textOrange}`}>
-              {isPresent ? "Presente" : "Sin registro"}
-            </span>
-            <span className={styles.metricSubtext}>
-              {isPresent ? `Ingreso registrado a las ${ingresoTime}` : "No se detecta marcación hoy"}
-            </span>
-            <div className={styles.badgeContainer}>
-              <span className={`${styles.statusBadge} ${ingresoEstado === "PUNTUAL" ? styles.badgeGreen : styles.badgeOrange}`}>
-                {ingresoEstado}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Tarjeta 2: Próximo Curso */}
-        <div className={styles.metricCard}>
-          <div className={`${styles.iconWrapper} ${styles.iconBlue}`}>
-            <i className="fa-solid fa-calendar-day"></i>
-          </div>
-          <div className={styles.metricContent}>
-            <span className={styles.metricLabel}>Próximo curso asignado</span>
-            <span className={styles.courseValue}>Base de Datos II</span>
-            <span className={styles.metricSubtext}>Aula LAB-02 · 10:00 a 12:00</span>
-            <span className={styles.metricDetailText}>Hoy · Escuela Profesional de Ingeniería de Sistemas</span>
-          </div>
-        </div>
-
-        {/* Tarjeta 3: Tardanzas */}
-        <div className={styles.metricCard}>
-          <div className={`${styles.iconWrapper} ${styles.iconOrange}`}>
-            <i className="fa-solid fa-clock"></i>
-          </div>
-          <div className={styles.metricContent}>
-            <span className={styles.metricLabel}>Tardanzas acumuladas</span>
-            <span className={`${styles.metricValue} ${styles.textOrange}`}>
-              {formatNumber(totalTardanzas)}
-            </span>
-            <span className={styles.metricSubtext}>Total en el período actual</span>
-            <span className={styles.metricDetailText}>Última tardanza: {ultimaTardanzaFecha}</span>
-          </div>
-        </div>
-
-        {/* Tarjeta 4: Inasistencias */}
-        <div className={styles.metricCard}>
-          <div className={`${styles.iconWrapper} ${styles.iconRed}`}>
-            <i className="fa-solid fa-triangle-exclamation"></i>
-          </div>
-          <div className={styles.metricContent}>
-            <span className={styles.metricLabel}>Inasistencias acumuladas</span>
-            <span className={`${styles.metricValue} ${styles.textRed}`}>
-              {formatNumber(totalAusencias)}
-            </span>
-            <span className={styles.metricSubtext}>Sin justificar en el sistema</span>
-            <span className={styles.metricDetailText}>Última inasistencia: {ultimaAusenciaFecha}</span>
-          </div>
-        </div>
-      </section>
-
-      {/* Fila Central: Calendario + Próxima Actividad */}
-      <section className={styles.contentGrid}>
-        {/* Calendario Semanal */}
-        <div className={`${styles.card} ${styles.colSpan8}`}>
-          <div className={styles.cardHeader}>
-            <h2>Calendario resumido semanal</h2>
-            <p>Vista de los cursos programados de la semana actual.</p>
-          </div>
-          <div className={styles.cardBody}>
-            <div className={styles.tableResponsive}>
-              <table className={styles.scheduleTable}>
-                <thead>
+      {/* Main Content Grid */}
+      <section className="grid grid-cols-1 gap-5 xl:grid-cols-[2fr_1fr]">
+        
+        {/* Últimas marcaciones */}
+        <Card className="flex flex-col overflow-hidden">
+          <CardHeader
+            title="Últimas marcaciones biométricas"
+            description="Registro de ingreso institucional y asistencias a cursos"
+          />
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm border-collapse">
+              <thead>
+                <tr className="border-y border-unsaac-border bg-slate-50/50">
+                  <th className="px-5 py-3.5 font-extrabold text-unsaac-muted">Fecha</th>
+                  <th className="px-5 py-3.5 font-extrabold text-unsaac-muted">Hora</th>
+                  <th className="px-5 py-3.5 font-extrabold text-unsaac-muted">Tipo de marcación</th>
+                  <th className="px-5 py-3.5 font-extrabold text-unsaac-muted">Resultado</th>
+                  <th className="px-5 py-3.5 font-extrabold text-unsaac-muted text-right">Método</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-unsaac-border">
+                {marcaciones.length === 0 ? (
                   <tr>
-                    <th style={{ width: "80px" }}>Hora</th>
-                    <th>Lun</th>
-                    <th>Mar</th>
-                    <th>Mié</th>
-                    <th>Jue</th>
-                    <th>Vie</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {/* Fila 08:00 */}
-                  <tr>
-                    <td className={styles.hourCell}>08:00</td>
-                    <td>
-                      <div className={`${styles.courseBlock} ${styles.bgBlue}`}>
-                        <span className={styles.blockTitle}>Base de Datos II</span>
-                        <span className={styles.blockTime}>08:00 - 10:00</span>
-                        <span className={styles.blockRoom}>LAB-02</span>
-                      </div>
-                    </td>
-                    <td></td>
-                    <td>
-                      <div className={`${styles.courseBlock} ${styles.bgYellow}`}>
-                        <span className={styles.blockTitle}>Tutoría</span>
-                        <span className={styles.blockTime}>08:00 - 10:00</span>
-                        <span className={styles.blockRoom}>B-101</span>
-                      </div>
-                    </td>
-                    <td></td>
-                    <td rowSpan={2} style={{ verticalAlign: "top" }}>
-                      <div className={`${styles.courseBlock} ${styles.bgRed}`} style={{ height: "calc(100% - 10px)", minHeight: "140px" }}>
-                        <span className={styles.blockTitle}>Arquitectura SW</span>
-                        <span className={styles.blockTime}>08:00 - 12:00</span>
-                        <span className={styles.blockRoom}>LAB-01</span>
-                      </div>
+                    <td colSpan={5} className="p-8 text-center text-sm font-semibold text-unsaac-muted">
+                      No hay marcaciones registradas para este docente.
                     </td>
                   </tr>
-
-                  {/* Fila 10:00 */}
-                  <tr>
-                    <td className={styles.hourCell}>10:00</td>
-                    <td></td>
-                    <td>
-                      <div className={`${styles.courseBlock} ${styles.bgGreen}`}>
-                        <span className={styles.blockTitle}>Ingeniería Web</span>
-                        <span className={styles.blockTime}>10:00 - 12:00</span>
-                        <span className={styles.blockRoom}>A-204</span>
-                      </div>
-                    </td>
-                    <td></td>
-                    <td></td>
-                  </tr>
-
-                  {/* Fila 12:00 */}
-                  <tr>
-                    <td className={styles.hourCell}>12:00</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td>
-                      <div className={`${styles.courseBlock} ${styles.bgPurple}`}>
-                        <span className={styles.blockTitle}>Seminario TI</span>
-                        <span className={styles.blockTime}>12:00 - 14:00</span>
-                        <span className={styles.blockRoom}>C-301</span>
-                      </div>
-                    </td>
-                    <td></td>
-                  </tr>
-
-                  {/* Fila 14:00 */}
-                  <tr>
-                    <td className={styles.hourCell}>14:00</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                  </tr>
-
-                  {/* Fila 16:00 */}
-                  <tr>
-                    <td className={styles.hourCell}>16:00</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-
-        {/* Próxima Actividad Académica */}
-        <div className={`${styles.card} ${styles.colSpan4}`}>
-          <div className={styles.cardHeader}>
-            <h2>Próxima actividad académica</h2>
-            <p>Detalles de la siguiente sesión programada para hoy.</p>
-          </div>
-          <div className={styles.cardBody}>
-            <div className={styles.activityBox}>
-              <h3 className={styles.activityTitle}>Base de Datos II</h3>
-              <p className={styles.activitySubtitle}>Ingeniería de Sistemas · Ciclo VII</p>
-
-              <div className={styles.activityInfoGrid}>
-                <div>
-                  <span className={styles.infoLabel}>Aula:</span>
-                  <span className={styles.infoVal}>LAB-02</span>
-                </div>
-                <div>
-                  <span className={styles.infoLabel}>Hora:</span>
-                  <span className={styles.infoVal}>10:00 - 12:00</span>
-                </div>
-              </div>
-
-              <div className={styles.activityBadgeRow}>
-                <span className={`${styles.statusBadge} ${styles.badgeLightBlue}`}>
-                  Programada hoy
-                </span>
-              </div>
-            </div>
-
-            <div className={styles.observationBox}>
-              <h4>Observación</h4>
-              <p>Llevar lista de prácticas y verificar marcación de ingreso al laboratorio antes de iniciar clase.</p>
-            </div>
-
-            <button className={styles.btnFullOrange}>
-              Ver horario completo
-            </button>
-          </div>
-        </div>
-      </section>
-
-      {/* Fila Inferior: Marcaciones + Resumen Semanal */}
-      <section className={styles.contentGrid}>
-        {/* Últimas Marcaciones */}
-        <div className={`${styles.card} ${styles.colSpan8}`}>
-          <div className={styles.cardHeader}>
-            <h2>Últimas marcaciones biométricas</h2>
-            <p>Registro de ingreso institucional y asistencias recientes.</p>
-          </div>
-          <div className={styles.cardBody}>
-            <div className={styles.tableResponsive}>
-              <table className={styles.logTable}>
-                <thead>
-                  <tr>
-                    <th>Fecha</th>
-                    <th>Hora</th>
-                    <th>Tipo de marcación</th>
-                    <th>Resultado</th>
-                    <th>Método</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {marcaciones.length === 0 ? (
-                    <tr>
-                      <td colSpan={5} style={{ textAlign: "center", padding: "2rem", color: "rgba(255,255,255,0.5)" }}>
-                        No hay marcaciones registradas para este docente.
+                ) : (
+                  marcaciones.slice(0, 7).map((m, index) => (
+                    <tr key={index} className="transition-colors hover:bg-slate-50/50">
+                      <td className="px-5 py-3.5 font-extrabold text-unsaac-text whitespace-nowrap">
+                        {formatDate(m.fecha)}
+                      </td>
+                      <td className="px-5 py-3.5 font-semibold text-unsaac-muted">
+                        {m.hora}
+                      </td>
+                      <td className="px-5 py-3.5 font-semibold text-unsaac-text">
+                        {m.tipo}
+                      </td>
+                      <td className="px-5 py-3.5">
+                        <Badge
+                          variant={
+                            m.resultado === "PUNTUAL" || m.resultado === "PRESENTE"
+                              ? "success"
+                              : m.resultado === "TARDANZA"
+                              ? "warning"
+                              : m.resultado === "AUSENTE"
+                              ? "danger"
+                              : "neutral"
+                          }
+                        >
+                          {m.resultado}
+                        </Badge>
+                      </td>
+                      <td className="px-5 py-3.5 font-semibold text-unsaac-muted text-right">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <DashboardIcon name="fingerprint" className="h-4 w-4 text-unsaac-blue" />
+                          {m.metodo}
+                        </div>
                       </td>
                     </tr>
-                  ) : (
-                    marcaciones.map((m, index) => (
-                      <tr key={index}>
-                        <td className={styles.boldCell}>{formatDate(m.fecha)}</td>
-                        <td>{m.hora}</td>
-                        <td>{m.tipo}</td>
-                        <td>
-                          <span
-                            className={`${styles.statusBadge} ${
-                              m.resultado === "PUNTUAL" || m.resultado === "PRESENTE"
-                                ? styles.badgeGreen
-                                : m.resultado === "TARDANZA"
-                                ? styles.badgeOrange
-                                : styles.badgeRed
-                            }`}
-                          >
-                            {m.resultado}
-                          </span>
-                        </td>
-                        <td>{m.metodo}</td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
+        </Card>
+
+        {/* Resumen & Actividad */}
+        <div className="flex flex-col gap-5">
+          <Card className="flex flex-col">
+            <CardHeader
+              title="Próxima actividad"
+              description="Siguiente sesión de hoy"
+            />
+            <CardContent className="pt-2 flex flex-col gap-4">
+              <div className="rounded-xl border border-blue-100 bg-blue-50 p-4">
+                <h4 className="text-sm font-black text-blue-900">Base de Datos II</h4>
+                <p className="text-xs font-semibold text-blue-700 mt-1">Ingeniería de Sistemas · Ciclo VII</p>
+                
+                <div className="mt-3 flex items-center justify-between text-xs font-bold">
+                   <span className="text-blue-800">Aula: <span className="text-blue-600">LAB-02</span></span>
+                   <span className="text-blue-800">Hora: <span className="text-blue-600">10:00 - 12:00</span></span>
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-amber-100 bg-amber-50 p-4">
+                <div className="flex items-center gap-2 mb-1">
+                   <DashboardIcon name="alert-triangle" className="h-4 w-4 text-amber-600" />
+                   <h4 className="text-xs font-black text-amber-900 uppercase tracking-wide">Observación</h4>
+                </div>
+                <p className="text-xs font-semibold text-amber-800">
+                  Llevar lista de prácticas y verificar marcación de ingreso al laboratorio antes de iniciar clase.
+                </p>
+              </div>
+
+              <Button variant="secondary" className="w-full text-sm font-extrabold justify-center mt-2">
+                Ver horario completo
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="flex flex-col flex-1">
+            <CardHeader title="Resumen de la semana" />
+            <CardContent className="pt-2">
+              <div className="grid grid-cols-2 gap-3 mb-4">
+                 <div className="rounded-xl border border-unsaac-border p-3 text-center bg-slate-50">
+                    <p className="text-[10px] font-black uppercase text-unsaac-muted tracking-wide mb-1">Clases programadas</p>
+                    <p className="text-2xl font-black text-unsaac-blue">05</p>
+                 </div>
+                 <div className="rounded-xl border border-unsaac-border p-3 text-center bg-slate-50">
+                    <p className="text-[10px] font-black uppercase text-unsaac-muted tracking-wide mb-1">Asistencias exitosas</p>
+                    <p className="text-2xl font-black text-unsaac-green">{formatNumber(asistenciaData?.ingresos.length || 0)}</p>
+                 </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
-        {/* Resumen de la Semana */}
-        <div className={`${styles.card} ${styles.colSpan4}`}>
-          <div className={styles.cardHeader}>
-            <h2>Resumen del período</h2>
-            <p>Indicadores rápidos de cumplimiento académico y asistencia.</p>
-          </div>
-          <div className={styles.cardBody}>
-            <div className={styles.summaryStatsGrid}>
-              <div className={styles.statSubCard}>
-                <span className={styles.statLabel}>Clases programadas</span>
-                <span className={`${styles.statNumber} ${styles.textBlue}`}>05</span>
-              </div>
-              <div className={styles.statSubCard}>
-                <span className={styles.statLabel}>Marcaciones exitosas</span>
-                <span className={`${styles.statNumber} ${styles.textGreen}`}>
-                  {formatNumber(asistenciaData?.ingresos.length || 0)}
-                </span>
-              </div>
-            </div>
-
-            <div className={styles.reminderBox}>
-              <h4>Recordatorio académico</h4>
-              <p>Mañana tiene sesión de Ingeniería Web a las 10:00 en el aula A-204. Revise el material de laboratorio y confirme la asistencia del grupo.</p>
-            </div>
-          </div>
-        </div>
       </section>
     </div>
   );
+}
+
+function MiniTrend({ values, colorHex }: { values: number[]; colorHex: string }) {
+  const max = Math.max(...values, 5);
+  const min = Math.min(...values, 0);
+  const range = Math.max(max - min, 1);
+
+  const points = values
+    .map((value, index) => {
+      const x = index * (280 / (values.length - 1));
+      const y = 30 - ((value - min) / range) * 22;
+      return `${x},${y}`;
+    })
+    .join(" ");
+
+  return (
+    <svg className="h-10 w-full" viewBox="0 0 280 32" fill="none" preserveAspectRatio="none">
+      <polyline
+        points={points}
+        fill="none"
+        stroke={colorHex}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function DashboardIcon({ name, className }: { name: string; className?: string }) {
+  if (name === "check-circle") {
+    return (
+      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+        <polyline points="22 4 12 14.01 9 11.01" />
+      </svg>
+    );
+  }
+  if (name === "clock") {
+    return (
+      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10" />
+        <polyline points="12 6 12 12 16 14" />
+      </svg>
+    );
+  }
+  if (name === "calendar") {
+    return (
+      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+        <line x1="16" y1="2" x2="16" y2="6" />
+        <line x1="8" y1="2" x2="8" y2="6" />
+        <line x1="3" y1="10" x2="21" y2="10" />
+      </svg>
+    );
+  }
+  if (name === "clock-alert") {
+    return (
+      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10" />
+        <polyline points="12 6 12 12 16 14" />
+        <line x1="12" y1="2" x2="12" y2="4" />
+      </svg>
+    );
+  }
+  if (name === "alert-triangle") {
+    return (
+      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+        <line x1="12" y1="9" x2="12" y2="13" />
+        <line x1="12" y1="17" x2="12.01" y2="17" />
+      </svg>
+    );
+  }
+  if (name === "fingerprint") {
+    return (
+      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M2 12C2 17.5 6.5 22 12 22s10-4.5 10-10S17.5 2 12 2a10 10 0 0 0-7.3 3.1" />
+        <path d="M5.5 8a8.5 8.5 0 0 1 13 0" />
+        <path d="M8 12a4.5 4.5 0 0 1 8 0" />
+        <path d="M10.5 15a1.5 1.5 0 0 1 3 0" />
+      </svg>
+    );
+  }
+  return null;
 }
