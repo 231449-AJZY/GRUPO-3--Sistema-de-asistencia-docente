@@ -1,0 +1,306 @@
+/* app/login/PanelDocente/layout.module.css */
+
+.container {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+  font-family: 'Inter', sans-serif;
+  background-color: #f4f6f9;
+}
+
+/* Sidebar Styling */
+.sidebar {
+  width: 260px;
+  background-color: #0b2b42; /* Deep blue institutional UNSAAC */
+  color: #a3b8cc;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 100;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.logoSection {
+  padding: 1.5rem 1.2rem;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.logoIcon {
+  width: 42px;
+  height: 42px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  font-size: 1.2rem;
+}
+
+.logoText h2 {
+  color: #fff;
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0;
+  letter-spacing: 0.5px;
+}
+
+.logoText p {
+  color: #f5b042; /* UNSAAC Gold */
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin: 0;
+  letter-spacing: 2px;
+}
+
+.navMenu {
+  flex: 1;
+  padding: 1.5rem 0.8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.navItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0.85rem 1.2rem;
+  color: #a3b8cc;
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  border-radius: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.navItem i {
+  width: 20px;
+  font-size: 1rem;
+  text-align: center;
+}
+
+.navItem:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  color: #fff;
+}
+
+.navItem.active {
+  background-color: #f58025; /* Active Orange from design */
+  color: #fff;
+  font-weight: 600;
+  box-shadow: 0 4px 10px rgba(245, 128, 37, 0.3);
+}
+
+.sidebarFooter {
+  padding: 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: auto;
+}
+
+.footerLogo {
+  color: rgba(255, 255, 255, 0.2);
+  font-size: 1.5rem;
+}
+
+.footerText p {
+  font-size: 0.65rem;
+  color: rgba(255, 255, 255, 0.5);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.footerText span {
+  font-size: 0.75rem;
+  color: #f5b042;
+  font-weight: 700;
+  display: block;
+  margin-top: 2px;
+}
+
+/* Main Content Wrapper */
+.mainWrapper {
+  flex: 1;
+  margin-left: 260px;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: #f8fafc;
+}
+
+/* Header Styling */
+.header {
+  background-color: #071625; /* Dark topbar background */
+  height: 70px;
+  padding: 0 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  color: #fff;
+  position: sticky;
+  top: 0;
+  z-index: 99;
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.headerVerticalLine {
+  width: 2px;
+  height: 24px;
+  background-color: #f58025; /* Orange vertical accent divider */
+}
+
+.headerLeft h1 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0;
+  letter-spacing: -0.2px;
+}
+
+.biometricBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background-color: rgba(245, 176, 66, 0.1);
+  border: 1px solid rgba(245, 176, 66, 0.3);
+  color: #f5b042;
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.3rem 0.8rem;
+  border-radius: 20px;
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+}
+
+.dateTime {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.dateTimeItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.dateTimeItem i {
+  color: #f5b042;
+  font-size: 0.95rem;
+}
+
+.timeSpan {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.userProfile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-left: 20px;
+  border-left: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.avatar {
+  width: 38px;
+  height: 38px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #fff;
+  border: 1.5px solid rgba(255, 255, 255, 0.25);
+  font-size: 1.1rem;
+}
+
+.userInfo {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.userRole {
+  font-size: 0.75rem;
+  color: #f5b042;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.userName {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.75);
+  font-weight: 500;
+  white-space: nowrap;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.logoutBtn {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  padding: 4px;
+  transition: color 0.2s;
+  font-size: 0.8rem;
+}
+
+.logoutBtn:hover {
+  color: #fff;
+}
+
+/* Content Area */
+.content {
+  flex: 1;
+  padding: 2rem;
+  overflow-y: auto;
+}
+
+@media (max-width: 1024px) {
+  .sidebar {
+    width: 70px;
+  }
+  .logoText, .navItem span, .sidebarFooter .footerText, .userInfo {
+    display: none;
+  }
+  .mainWrapper {
+    margin-left: 70px;
+  }
+  .logoSection, .sidebarFooter {
+    justify-content: center;
+    padding: 1rem 0;
+  }
+  .navItem {
+    justify-content: center;
+    padding: 0.85rem 0;
+  }
+  .userProfile {
+    border-left: none;
+    padding-left: 0;
+  }
+}
