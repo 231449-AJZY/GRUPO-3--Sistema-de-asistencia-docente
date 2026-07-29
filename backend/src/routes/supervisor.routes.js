@@ -1,57 +1,143 @@
 const router = require('express').Router();
 const pool = require('../db/pool');
-// Importamos la autenticación y la autorización que ya existían en el proyecto base
 const { autenticar, soloRol } = require('../middlewares/auth.middleware');
 
 // Aplicamos el filtro de rol: Solo permite acceso a Supervisor y Administrador
 router.use(autenticar, soloRol('Supervisor', 'Administrador'));
 
-// GET /api/supervisor/monitoreo
-// Consulta la asistencia del día en tiempo real
-router.get('/monitoreo', async (req, res) => {
+// 1. GET /api/supervisor/monitoreo-hoy
+// Muestra la asistencia del día actual con filtros opcionales por departamento o estado
+router.get('/monitoreo-hoy', async (req, res) => {
+  const { departamento_id, estado } = req.query;
+
   try {
-    const result = await pool.query(
-      `SELECT r.id, u.codigo, u.nombres, u.apellidos,
-              dep.nombre AS departamento, r.hora_registro, r.estado
-       FROM registros_ingreso_institucional r
-       JOIN docentes d  ON d.id = r.docente_id
-       JOIN usuarios u  ON u.id = d.usuario_id
-       JOIN departamentos_academicos dep ON dep.id = d.departamento_id
-       WHERE r.fecha = CURRENT_DATE
-       ORDER BY r.hora_registro DESC`
-    );
-    res.json({ 
-      fecha: new Date().toISOString().split('T')[0], 
-      registros: result.rows 
+    let query = `
+      SELECT 
+        r.id,
+        u.codigo,
+        u.nombres,
+        u.apellidos,
+        dep.nombre AS departamento,
+        r.hora_registro,
+        r.estado,
+        r.dispositivo_id
+      FROM registros_ingreso_institucional r
+      JOIN docentes d ON d.id = r.docente_id
+      JOIN usuarios u ON u.id = d.usuario_id
+      JOIN departamentos_academicos dep ON dep.id = d.departamento_id
+      WHERE r.fecha = CURRENT_DATE
+    `;
+
+    const values = [];
+    let paramIndex = 1;
+
+    if (departamento_id) {
+      query += ` AND d.departamento_id = $${paramIndex}`;
+      values.push(departamento_id);
+      paramIndex++;
+    }
+
+    if (estado) {
+      query += ` AND r.estado = $${paramIndex}`;
+      values.push(estado);
+      paramIndex++;
+    }
+
+    query += ` ORDER BY r.hora_registro DESC`;
+
+    const result = await pool.query(query, values);
+
+    res.status(200).json({
+      fecha: new Date().toISOString().split('T')[0],
+      total_asistencias: result.rowCount,
+      registros: result.rows
     });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Error interno del servidor' });
+    res.status(500).json({ error: 'Error interno al consultar el monitoreo del día' });
   }
 });
 
-// GET /api/supervisor/alertas
-// Lista alertas e incumplimientos (tardanzas del día)
-router.get('/alertas', async (req, res) => {
+// 2. GET /api/supervisor/reporte-rango
+// Genera el historial consolidado de asistencia por rango de fechas
+router.get('/reporte-rango', async (req, res) => {
+  const { fecha_inicio, fecha_fin, docente_id } = req.query;
+
+  if (!fecha_inicio || !fecha_fin) {
+    return res.status(400).json({ error: 'Las fechas inicio y fin son obligatorias (YYYY-MM-DD)' });
+  }
+
   try {
-    const result = await pool.query(
-      `SELECT u.codigo, u.nombres, u.apellidos, dep.nombre AS departamento, r.hora_registro, r.estado
-       FROM registros_ingreso_institucional r
-       JOIN docentes d  ON d.id = r.docente_id
-       JOIN usuarios u  ON u.id = d.usuario_id
-       JOIN departamentos_academicos dep ON dep.id = d.departamento_id
-       WHERE r.fecha = CURRENT_DATE AND r.estado = 'TARDANZA'
-       ORDER BY r.hora_registro DESC`
-    );
-    res.json({ alertas: result.rows });
+    let query = `
+      SELECT 
+        r.fecha,
+        u.codigo,
+        CONCAT(u.nombres, ' ', u.apellidos) AS docente,
+        r.hora_registro,
+        r.estado,
+        'Ingreso Institucional' AS tipo_registro
+      FROM registros_ingreso_institucional r
+      JOIN docentes d ON d.id = r.docente_id
+      JOIN usuarios u ON u.id = d.usuario_id
+      WHERE r.fecha BETWEEN $1 AND $2
+    `;
+
+    const values = [fecha_inicio, fecha_fin];
+
+    if (docente_id) {
+      query += ` AND r.docente_id = $3`;
+      values.push(docente_id);
+    }
+
+    query += ` ORDER BY r.fecha DESC, r.hora_registro ASC`;
+
+    const result = await pool.query(query, values);
+
+    res.status(200).json({
+      rango: { fecha_inicio, fecha_fin },
+      total: result.rowCount,
+      reporte: result.rows
+    });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Error interno al consultar alertas' });
+    res.status(500).json({ error: 'Error interno al generar el reporte' });
+  }
+});
+
+// 3. GET /api/supervisor/incidencias-hoy
+// Muestra únicamente docentes con TARDANZA hoy
+router.get('/incidencias-hoy', async (req, res) => {
+  try {
+    const query = `
+      SELECT 
+        u.codigo,
+        CONCAT(u.nombres, ' ', u.apellidos) AS docente,
+        dep.nombre AS departamento,
+        r.hora_registro,
+        r.estado
+      FROM registros_ingreso_institucional r
+      JOIN docentes d ON d.id = r.docente_id
+      JOIN usuarios u ON u.id = d.usuario_id
+      JOIN departamentos_academicos dep ON dep.id = d.departamento_id
+      WHERE r.fecha = CURRENT_DATE AND r.estado = 'TARDANZA'
+      ORDER BY r.hora_registro DESC
+    `;
+
+    const result = await pool.query(query);
+
+    res.status(200).json({
+      fecha: new Date().toISOString().split('T')[0],
+      total_incidencias: result.rowCount,
+      incidencias: result.rows
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error al obtener incidencias' });
   }
 });
 
 // GET /api/supervisor/historial-general
-// Tarea 20: Permite consultar el consolidado de asistencias institucionales en formato JSON
+// Consolidado de asistencias institucionales en formato JSON
 router.get('/historial-general', async (req, res) => {
   try {
     const query = `
@@ -64,7 +150,6 @@ router.get('/historial-general', async (req, res) => {
     
     const result = await pool.query(query);
     
-    // Retorna la respuesta en el formato JSON requerido
     res.status(200).json({
       total_registros: result.rowCount,
       data: result.rows
@@ -75,7 +160,7 @@ router.get('/historial-general', async (req, res) => {
   }
 });
 
-// Diccionario de funcionalidades fijas por rol (Regla de negocio)
+// Diccionario de funcionalidades fijas por rol
 const funcionalidadesPorRol = {
   'Administrador': [
     { modulo: 'Usuarios', ruta: '/admin/usuarios', permisos: ['leer', 'crear', 'editar', 'eliminar'] },
@@ -95,7 +180,6 @@ const funcionalidadesPorRol = {
 };
 
 // GET /api/supervisor/funcionalidades
-// Obtiene los módulos y permisos accesibles según el rol en formato JSON
 router.get('/funcionalidades', (req, res) => {
   try {
     const rolUsuario = req.user ? req.user.rol : 'Supervisor';
