@@ -60,5 +60,17 @@ describe('Pruebas Unitarias de Autenticación y Autorización (soloRol)', () => 
     expect(res.body.ok).toBe(true);
   });
 
-});
+  test('5. Debe retornar la estructura JSON esperada en historial-general', async () => {
+    const tokenSupervisor = jwt.sign(
+      { id: 1, rol: 'Supervisor', nombres: 'Carlos' },
+      process.env.JWT_SECRET
+    );
 
+    const res = await request(app)
+      .get('/api/test/supervisor')
+      .set('Authorization', `Bearer ${tokenSupervisor}`);
+
+    expect(res.status).toBe(200);
+  });
+
+}); // <-- El describe se cierra AQUÍ al final
