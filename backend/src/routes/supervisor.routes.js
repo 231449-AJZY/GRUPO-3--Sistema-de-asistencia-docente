@@ -75,4 +75,40 @@ router.get('/historial-general', async (req, res) => {
   }
 });
 
+// Diccionario de funcionalidades fijas por rol (Regla de negocio)
+const funcionalidadesPorRol = {
+  'Administrador': [
+    { modulo: 'Usuarios', ruta: '/admin/usuarios', permisos: ['leer', 'crear', 'editar', 'eliminar'] },
+    { modulo: 'Configuracion', ruta: '/admin/configuracion', permisos: ['editar'] },
+    { modulo: 'Reportes', ruta: '/admin/reportes', permisos: ['leer'] }
+  ],
+  'Supervisor': [
+    { modulo: 'Asistencia Hoy', ruta: '/supervisor/hoy', permisos: ['leer'] },
+    { modulo: 'Reportes', ruta: '/supervisor/reportes', permisos: ['leer'] }
+  ],
+  'Docente': [
+    { modulo: 'Mi Perfil', ruta: '/docente/perfil', permisos: ['leer'] },
+    { modulo: 'Marcar Ingreso', ruta: '/docente/asistencia/ingreso', permisos: ['crear'] },
+    { modulo: 'Marcar Curso', ruta: '/docente/asistencia/curso', permisos: ['crear'] },
+    { modulo: 'Mi Historial', ruta: '/docente/historial', permisos: ['leer'] }
+  ]
+};
+
+// GET /api/supervisor/funcionalidades
+// Obtiene los módulos y permisos accesibles según el rol en formato JSON
+router.get('/funcionalidades', (req, res) => {
+  try {
+    const rolUsuario = req.user ? req.user.rol : 'Supervisor';
+    const funcionalidades = funcionalidadesPorRol[rolUsuario] || [];
+
+    res.status(200).json({
+      rol: rolUsuario,
+      funcionalidades: funcionalidades
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error al obtener las funcionalidades.' });
+  }
+});
+
 module.exports = router;
