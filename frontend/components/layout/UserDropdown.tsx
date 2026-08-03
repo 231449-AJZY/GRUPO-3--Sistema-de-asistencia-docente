@@ -25,14 +25,17 @@ export default function UserDropdown({ user }: UserDropdownProps) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const initials = user.nombre
+  const displayName = user?.nombre || ((user as any)?.nombres ? `${(user as any).nombres || ""} ${(user as any).apellidos || ""}`.trim() : "") || "Usuario";
+  
+  const initials = displayName
     .split(" ")
+    .filter(Boolean)
     .map((word) => word[0])
     .join("")
     .slice(0, 2)
-    .toUpperCase();
+    .toUpperCase() || "US";
 
-  const currentRole = (user.rol || "ADMINISTRADOR").toUpperCase();
+  const currentRole = (user?.rol || "ADMINISTRADOR").toUpperCase();
 
   const roleDisplayLabel =
     currentRole === "ADMINISTRADOR"
@@ -40,6 +43,8 @@ export default function UserDropdown({ user }: UserDropdownProps) {
       : currentRole === "DOCENTE"
       ? "Docente universitario"
       : "Supervisor de control";
+
+  const displayCorreo = user?.correo || (user as any)?.email || "";
 
   return (
     <div className="relative" ref={dropdownRef}>
@@ -56,7 +61,7 @@ export default function UserDropdown({ user }: UserDropdownProps) {
 
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-black leading-tight text-white">
-            {user.nombre}
+            {displayName}
           </p>
           <p className="truncate text-xs font-semibold text-blue-100/80 mt-0.5">
             {roleDisplayLabel}
@@ -95,13 +100,13 @@ export default function UserDropdown({ user }: UserDropdownProps) {
 
               <div className="min-w-0 flex-1">
                 <p className="truncate text-[15px] font-bold text-[#1e293b] leading-tight">
-                  {user.nombre}
+                  {displayName}
                 </p>
                 <p className="truncate text-xs font-semibold text-[#64748b] mt-0.5">
                   {roleDisplayLabel}
                 </p>
                 <p className="truncate text-xs font-semibold text-[#64748b] mt-0.5">
-                  {user.correo}
+                  {displayCorreo}
                 </p>
               </div>
             </div>

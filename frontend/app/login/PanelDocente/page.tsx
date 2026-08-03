@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import Card, { CardContent, CardHeader } from "@/components/ui/Card";
-import Badge from "@/components/ui/Badge";
+import { useEffect, useState, useMemo } from "react";
+import Card, { CardContent } from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
+import Badge from "@/components/ui/Badge";
 
 interface UserData {
   id: number;
@@ -31,39 +31,46 @@ interface AsistenciaData {
   cursos: AsistenciaCurso[];
 }
 
+interface HorarioData {
+  horario_id: number;
+  curso: string;
+  aula: string;
+  dia_semana: number;
+  hora_inicio: string;
+  hora_fin: string;
+}
+
+const DAYS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
+
 export default function DocenteDashboard() {
   const [user, setUser] = useState<UserData | null>(null);
   const [asistenciaData, setAsistenciaData] = useState<AsistenciaData | null>(null);
+  const [horariosData, setHorariosData] = useState<HorarioData[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user") || sessionStorage.getItem("user");
     const token = localStorage.getItem("token") || sessionStorage.getItem("token");
-    if (storedUser) {
+    if (storedUser && token) {
       try {
         const parsedUser = JSON.parse(storedUser);
         setUser(parsedUser);
 
-        if (token && parsedUser.id) {
-          fetch(`/api/asistencia/docente/${parsedUser.id}`, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
+        Promise.all([
+          fetch(`/api/asistencia/docente/${parsedUser.id}`, { headers: { Authorization: `Bearer ${token}` } }),
+          fetch(`/api/docentes/${parsedUser.id}/horarios`, { headers: { Authorization: `Bearer ${token}` } })
+        ])
+          .then(([resAsist, resHor]) => Promise.all([resAsist.json(), resHor.json()]))
+          .then(([dataAsist, dataHor]) => {
+            setAsistenciaData(dataAsist);
+            setHorariosData(dataHor.horarios || []);
+            setLoading(false);
           })
-            .then((res) => res.json())
-            .then((data) => {
-              setAsistenciaData(data);
-              setLoading(false);
-            })
-            .catch((err) => {
-              console.error("Error fetching attendance data:", err);
-              setLoading(false);
-            });
-        } else {
-          setLoading(false);
-        }
+          .catch((err) => {
+            console.error("Error fetching dashboard data:", err);
+            setLoading(false);
+          });
       } catch (e) {
-        console.error("Error parsing user data:", e);
         setLoading(false);
       }
     } else {
@@ -71,47 +78,97 @@ export default function DocenteDashboard() {
     }
   }, []);
 
-  const docenteName = user ? `${user.nombres} ${user.apellidos}` : "Docente Universitario";
+  const docenteName = user ? `${user.nombres} ${user.apellidos}` : "Docente";
 
-  // --- Data Processing ---
+  // --- Data Processing for Cards ---
   const todayStr = new Date().toISOString().split("T")[0];
-  const todayIngreso = asistenciaData?.ingresos.find(
-    (r) => r.fecha.split("T")[0] === todayStr
-  );
+  const todayIngreso = asistenciaData?.ingresos.find((r) => r.fecha.split("T")[0] === todayStr);
 
   const isPresent = !!todayIngreso;
-  const ingresoTime = todayIngreso ? todayIngreso.hora_registro.slice(0, 5) : "";
   const ingresoEstado = todayIngreso ? todayIngreso.estado : "PENDIENTE";
 
-  // Tardanzas
-  const tardanzasIngresos = asistenciaData?.ingresos.filter((r) => r.estado === "TARDANZA") || [];
-  const tardanzasCursos = asistenciaData?.cursos.filter((r) => r.estado === "TARDANZA") || [];
-  const totalTardanzas = tardanzasIngresos.length + tardanzasCursos.length;
+  // Tardanzas del mes
+  const currentMonthIdx = new Date().getMonth();
+  const tardanzasIngresos = asistenciaData?.ingresos.filter((r) => r.estado === "TARDANZA" && new Date(r.fecha).getMonth() === currentMonthIdx) || [];
+  const tardanzasCursos = asistenciaData?.cursos.filter((r) => r.estado === "TARDANZA" && new Date(r.fecha).getMonth() === currentMonthIdx) || [];
+  const totalTardanzasMes = tardanzasIngresos.length + tardanzasCursos.length;
+  
+  const todasLasTardanzas = [...tardanzasIngresos, ...tardanzasCursos].sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime());
+  const ultimaTardanzaFecha = todasLasTardanzas[0] ? new Date(todasLasTardanzas[0].fecha).toLocaleDateString('es-ES') : "Sin registros";
 
-  const todasLasTardanzas = [...tardanzasIngresos, ...tardanzasCursos].sort((a, b) => 
-    b.fecha.localeCompare(a.fecha)
-  );
-  const ultimaTardanzaFecha = todasLasTardanzas[0] 
-    ? formatDate(todasLasTardanzas[0].fecha) 
-    : "—";
+  // Inasistencias del mes
+  const ausenciasIngresos = asistenciaData?.ingresos.filter((r) => r.estado === "AUSENTE" && new Date(r.fecha).getMonth() === currentMonthIdx) || [];
+  const ausenciasCursos = asistenciaData?.cursos.filter((r) => r.estado === "AUSENTE" && new Date(r.fecha).getMonth() === currentMonthIdx) || [];
+  const totalAusenciasMes = ausenciasIngresos.length + ausenciasCursos.length;
 
-  // Inasistencias
-  const ausenciasIngresos = asistenciaData?.ingresos.filter((r) => r.estado === "AUSENTE") || [];
-  const ausenciasCursos = asistenciaData?.cursos.filter((r) => r.estado === "AUSENTE") || [];
-  const totalAusencias = ausenciasIngresos.length + ausenciasCursos.length;
+  const todasLasAusencias = [...ausenciasIngresos, ...ausenciasCursos].sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime());
+  const ultimaAusenciaFecha = todasLasAusencias[0] ? new Date(todasLasAusencias[0].fecha).toLocaleDateString('es-ES') : "Sin registros";
 
-  const todasLasAusencias = [...ausenciasIngresos, ...ausenciasCursos].sort((a, b) => 
-    b.fecha.localeCompare(a.fecha)
-  );
-  const ultimaAusenciaFecha = todasLasAusencias[0] 
-    ? formatDate(todasLasAusencias[0].fecha) 
-    : "—";
+  // Próximo curso
+  const jsDay = new Date().getDay() || 7; // 1-7
+  const currentHour = new Date().getHours() + new Date().getMinutes() / 60;
+  
+  // Try to find a course today that hasn't finished yet
+  let nextCourse = horariosData.filter(h => h.dia_semana === jsDay && parseInt(h.hora_fin.split(':')[0]) + parseInt(h.hora_fin.split(':')[1])/60 > currentHour)
+                               .sort((a,b) => a.hora_inicio.localeCompare(b.hora_inicio))[0];
+  
+  // If none today, find the first one in the week
+  if (!nextCourse && horariosData.length > 0) {
+    let searchDay = jsDay + 1;
+    while (!nextCourse && searchDay !== jsDay) {
+      if (searchDay > 7) searchDay = 1;
+      nextCourse = horariosData.filter(h => h.dia_semana === searchDay).sort((a,b) => a.hora_inicio.localeCompare(b.hora_inicio))[0];
+      searchDay++;
+    }
+  }
+
+  // Calculate Time to next course
+  let timeToNextCourse = "En -- h -- min";
+  if (nextCourse) {
+    const [h, m] = nextCourse.hora_inicio.split(':').map(Number);
+    let targetDay = nextCourse.dia_semana;
+    let daysDiff = targetDay - jsDay;
+    if (daysDiff < 0) daysDiff += 7;
+    
+    const targetDate = new Date();
+    targetDate.setDate(targetDate.getDate() + daysDiff);
+    targetDate.setHours(h, m, 0, 0);
+
+    if (daysDiff === 0 && (h + m/60) < currentHour) {
+      targetDate.setDate(targetDate.getDate() + 7);
+    }
+
+    const diffMs = targetDate.getTime() - new Date().getTime();
+    if (diffMs > 0) {
+      const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
+      const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+      timeToNextCourse = `En ${diffHrs} h ${diffMins} min`;
+    } else {
+      timeToNextCourse = "En curso";
+    }
+  }
+
+  // Resumen de la semana
+  const clasesProgramadas = horariosData.length;
+  // This week's registered classes (approximated for demo)
+  const thisWeekStart = new Date();
+  thisWeekStart.setDate(thisWeekStart.getDate() - jsDay + 1);
+  const clasesRegistradas = (asistenciaData?.cursos || []).filter(c => new Date(c.fecha) >= thisWeekStart).length;
+
+  // Colors for unique courses in calendar
+  const uniqueCoursesList = Array.from(new Set(horariosData.map(h => h.curso)));
+  const courseColors: Record<string, string> = {};
+  const colorPalette = ["#000000", "#1e293b", "#334155", "#0f172a", "#1e1e1e"]; // Monochromatic dark scheme based on screenshot
+  uniqueCoursesList.forEach((curso, idx) => {
+    courseColors[curso] = colorPalette[idx % colorPalette.length];
+  });
 
   // Consolidación de marcaciones para la tabla
   const marcaciones: Array<{
     fecha: string;
     hora: string;
     tipo: string;
+    detalle: string;
     resultado: string;
     metodo: string;
   }> = [];
@@ -122,369 +179,444 @@ export default function DocenteDashboard() {
         fecha: r.fecha,
         hora: r.hora_registro,
         tipo: "Ingreso institucional",
+        detalle: "", // Esperando a la API
         resultado: r.estado,
-        metodo: "Huella digital",
+        metodo: "Sistema",
       });
     });
     asistenciaData.cursos.forEach((r) => {
       marcaciones.push({
         fecha: r.fecha,
         hora: r.hora_registro,
-        tipo: `Inicio de clase: ${r.curso}`,
+        tipo: "Asistencia de curso",
+        detalle: `${r.curso} - ${r.aula}`,
         resultado: r.estado,
-        metodo: "Huella digital",
+        metodo: "Sistema",
       });
     });
   }
 
-  // Ordenar cronológicamente descendente
   marcaciones.sort((a, b) => {
     const dateTimeA = `${a.fecha.split("T")[0]}T${a.hora}`;
     const dateTimeB = `${b.fecha.split("T")[0]}T${b.hora}`;
     return dateTimeB.localeCompare(dateTimeA);
   });
 
+  // Formatter helpers
   function formatDate(dateStr: string) {
     if (!dateStr) return "";
     const cleanDate = dateStr.split("T")[0];
     const parts = cleanDate.split("-");
-    if (parts.length === 3) {
-      return `${parts[2]}/${parts[1]}/${parts[0]}`;
-    }
+    if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
     return dateStr;
   }
 
-  function formatNumber(num: number) {
-    return num < 10 ? `0${num}` : `${num}`;
+  function formatTimeShort(timeStr: string) {
+    if (!timeStr) return "";
+    return timeStr.slice(0, 5);
   }
 
   if (loading) {
-    return (
-      <div className="flex min-h-[60vh] flex-col items-center justify-center">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-unsaac-orange/30 border-t-unsaac-orange" />
-        <p className="mt-4 text-sm font-bold text-unsaac-muted">Cargando información del docente...</p>
-      </div>
-    );
+    return <div className="p-8 text-center text-unsaac-muted animate-pulse">Cargando dashboard...</div>;
   }
 
   return (
-    <div className="admin-dashboard-animated space-y-6">
-      {/* Title Section */}
-      <div>
-        <h1 className="text-[34px] font-extrabold leading-tight text-unsaac-text">
-          Panel principal del docente
-        </h1>
-        <p className="mt-1 text-base font-semibold text-unsaac-muted">
-          Bienvenida, {docenteName} · Resumen de asistencia y actividad académica
-        </p>
+    <div className="p-6 md:p-8 space-y-8 bg-slate-50 min-h-screen">
+      {/* Top Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-4">
+        <div>
+          <h1 className="text-3xl font-black text-slate-900 tracking-tight">
+            Dashboard del docente
+          </h1>
+          <p className="mt-1.5 text-sm font-semibold text-slate-500">
+            Bienvenido, {docenteName} · Resumen de asistencia y actividad académica.
+          </p>
+        </div>
+        <Button variant="outline" className="font-bold border-slate-200 bg-white shadow-sm hover:bg-slate-50 text-slate-700">
+          Actualizar datos
+        </Button>
       </div>
 
-      {/* Metrics Grid */}
-      <section className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
+      {/* 4 Stat Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
         
-        {/* Metric 1: Estado */}
-        <Card className="overflow-hidden flex flex-col justify-between h-full p-6">
-          <div className="flex items-start gap-4">
-            <div className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-full ${isPresent ? "bg-green-50 text-green-600 border border-green-100" : "bg-amber-50 text-amber-500 border border-amber-100"}`}>
-              <DashboardIcon name={isPresent ? "check-circle" : "clock"} className="h-6 w-6" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <h3 className="text-sm font-extrabold text-unsaac-muted truncate">
-                Estado de asistencia hoy
-              </h3>
-              <p className={`mt-1 text-2xl font-black leading-none ${isPresent ? "text-green-600" : "text-amber-500"}`}>
-                {isPresent ? "Presente" : "Sin registro"}
-              </p>
-              <p className="mt-1 text-xs font-bold text-unsaac-muted">
-                {isPresent ? `Ingreso a las ${ingresoTime}` : "No se detecta marcación hoy"}
-              </p>
-            </div>
-          </div>
-          <div className="mt-4 border-t border-slate-100 pt-3">
-             <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-extrabold tracking-wide uppercase ${ingresoEstado === "PUNTUAL" ? "bg-green-100 text-green-700" : ingresoEstado === "TARDANZA" ? "bg-amber-100 text-amber-700" : "bg-slate-100 text-slate-600"}`}>
-               {ingresoEstado}
-             </span>
-          </div>
-        </Card>
-
-        {/* Metric 2: Próximo curso */}
-        <Card className="overflow-hidden flex flex-col justify-between h-full p-6">
-          <div className="flex items-start gap-4">
-            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-600 border border-blue-100">
-              <DashboardIcon name="calendar" className="h-6 w-6" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <h3 className="text-sm font-extrabold text-unsaac-muted truncate">
-                Próximo curso asignado
-              </h3>
-              <p className="mt-1 text-2xl font-black leading-none text-blue-600 truncate">
-                Base de Datos II
-              </p>
-              <p className="mt-1 text-xs font-bold text-unsaac-muted truncate">
-                Aula LAB-02 · 10:00 a 12:00
-              </p>
-            </div>
-          </div>
-          <div className="mt-4 border-t border-slate-100 pt-3">
-             <span className="inline-flex rounded-full px-2 py-0.5 text-[10px] font-extrabold tracking-wide uppercase bg-blue-100 text-blue-700">
-               Hoy · Ingeniería de Sistemas
-             </span>
-          </div>
-        </Card>
-
-        {/* Metric 3: Tardanzas */}
-        <Card className="overflow-hidden flex flex-col justify-between h-full p-6">
-          <div className="flex items-start gap-4">
-            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-amber-50 text-amber-500 border border-amber-100">
-              <DashboardIcon name="clock-alert" className="h-6 w-6" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <h3 className="text-sm font-extrabold text-unsaac-muted truncate">
-                Tardanzas acumuladas
-              </h3>
-              <p className="mt-1 text-3xl font-black leading-none text-amber-500">
-                {formatNumber(totalTardanzas)}
-              </p>
-              <p className="mt-1 text-xs font-bold text-unsaac-muted">
-                Total en el período actual
-              </p>
-            </div>
-          </div>
-          <div className="mt-4 -mx-6 -mb-6">
-            <MiniTrend values={[1, 2, 1, 0, totalTardanzas]} colorHex="#F59E0B" />
-          </div>
-        </Card>
-
-        {/* Metric 4: Inasistencias */}
-        <Card className="overflow-hidden flex flex-col justify-between h-full p-6">
-          <div className="flex items-start gap-4">
-            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-red-50 text-red-600 border border-red-100">
-              <DashboardIcon name="alert-triangle" className="h-6 w-6" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <h3 className="text-sm font-extrabold text-unsaac-muted truncate">
-                Inasistencias acumuladas
-              </h3>
-              <p className="mt-1 text-3xl font-black leading-none text-red-600">
-                {formatNumber(totalAusencias)}
-              </p>
-              <p className="mt-1 text-xs font-bold text-unsaac-muted">
-                Sin justificar en el sistema
-              </p>
-            </div>
-          </div>
-          <div className="mt-4 -mx-6 -mb-6">
-            <MiniTrend values={[0, 0, 1, 0, totalAusencias]} colorHex="#DC2626" />
-          </div>
-        </Card>
-
-      </section>
-
-      {/* Main Content Grid */}
-      <section className="grid grid-cols-1 gap-5 xl:grid-cols-[2fr_1fr]">
-        
-        {/* Últimas marcaciones */}
-        <Card className="flex flex-col overflow-hidden">
-          <CardHeader
-            title="Últimas marcaciones biométricas"
-            description="Registro de ingreso institucional y asistencias a cursos"
-          />
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm border-collapse">
-              <thead>
-                <tr className="border-y border-unsaac-border bg-slate-50/50">
-                  <th className="px-5 py-3.5 font-extrabold text-unsaac-muted">Fecha</th>
-                  <th className="px-5 py-3.5 font-extrabold text-unsaac-muted">Hora</th>
-                  <th className="px-5 py-3.5 font-extrabold text-unsaac-muted">Tipo de marcación</th>
-                  <th className="px-5 py-3.5 font-extrabold text-unsaac-muted">Resultado</th>
-                  <th className="px-5 py-3.5 font-extrabold text-unsaac-muted text-right">Método</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-unsaac-border">
-                {marcaciones.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="p-8 text-center text-sm font-semibold text-unsaac-muted">
-                      No hay marcaciones registradas para este docente.
-                    </td>
-                  </tr>
-                ) : (
-                  marcaciones.slice(0, 7).map((m, index) => (
-                    <tr key={index} className="transition-colors hover:bg-slate-50/50">
-                      <td className="px-5 py-3.5 font-extrabold text-unsaac-text whitespace-nowrap">
-                        {formatDate(m.fecha)}
-                      </td>
-                      <td className="px-5 py-3.5 font-semibold text-unsaac-muted">
-                        {m.hora}
-                      </td>
-                      <td className="px-5 py-3.5 font-semibold text-unsaac-text">
-                        {m.tipo}
-                      </td>
-                      <td className="px-5 py-3.5">
-                        <Badge
-                          variant={
-                            m.resultado === "PUNTUAL" || m.resultado === "PRESENTE"
-                              ? "success"
-                              : m.resultado === "TARDANZA"
-                              ? "warning"
-                              : m.resultado === "AUSENTE"
-                              ? "danger"
-                              : "neutral"
-                          }
-                        >
-                          {m.resultado}
-                        </Badge>
-                      </td>
-                      <td className="px-5 py-3.5 font-semibold text-unsaac-muted text-right">
-                        <div className="flex items-center justify-end gap-1.5">
-                          <DashboardIcon name="fingerprint" className="h-4 w-4 text-unsaac-blue" />
-                          {m.metodo}
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </Card>
-
-        {/* Resumen & Actividad */}
-        <div className="flex flex-col gap-5">
-          <Card className="flex flex-col">
-            <CardHeader
-              title="Próxima actividad"
-              description="Siguiente sesión de hoy"
-            />
-            <CardContent className="pt-2 flex flex-col gap-4">
-              <div className="rounded-xl border border-blue-100 bg-blue-50 p-4">
-                <h4 className="text-sm font-black text-blue-900">Base de Datos II</h4>
-                <p className="text-xs font-semibold text-blue-700 mt-1">Ingeniería de Sistemas · Ciclo VII</p>
-                
-                <div className="mt-3 flex items-center justify-between text-xs font-bold">
-                   <span className="text-blue-800">Aula: <span className="text-blue-600">LAB-02</span></span>
-                   <span className="text-blue-800">Hora: <span className="text-blue-600">10:00 - 12:00</span></span>
-                </div>
-              </div>
-
-              <div className="rounded-xl border border-amber-100 bg-amber-50 p-4">
-                <div className="flex items-center gap-2 mb-1">
-                   <DashboardIcon name="alert-triangle" className="h-4 w-4 text-amber-600" />
-                   <h4 className="text-xs font-black text-amber-900 uppercase tracking-wide">Observación</h4>
-                </div>
-                <p className="text-xs font-semibold text-amber-800">
-                  Llevar lista de prácticas y verificar marcación de ingreso al laboratorio antes de iniciar clase.
+        {/* Card 1: Estado Asistencia */}
+        <Card className="rounded-2xl border-slate-200/60 shadow-sm bg-white overflow-hidden">
+          <CardContent className="p-5 flex flex-col justify-between h-full relative">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-[11px] font-extrabold text-slate-800 mb-1">Estado de asistencia del día</p>
+                <h3 className={`text-[28px] font-black leading-none tracking-tight ${isPresent ? 'text-green-600' : 'text-green-600'}`}>
+                  {isPresent ? 'Presente' : 'Pendiente'}
+                </h3>
+                <p className="text-[10px] font-bold text-slate-500 mt-2 leading-snug w-[80%]">
+                  {isPresent ? 'Marcación institucional registrada correctamente' : 'Aún no existe ingreso institucional registrado'}
                 </p>
               </div>
+              <div className="h-10 w-10 shrink-0 bg-green-50 rounded-xl border border-green-100 flex items-center justify-center">
+                <svg className="w-5 h-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+            </div>
+            <div className="mt-4">
+              <span className="inline-flex bg-blue-50 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded-full border border-blue-100">
+                {ingresoEstado.charAt(0).toUpperCase() + ingresoEstado.slice(1).toLowerCase()}
+              </span>
+            </div>
+          </CardContent>
+        </Card>
 
-              <Button variant="secondary" className="w-full text-sm font-extrabold justify-center mt-2">
-                Ver horario completo
-              </Button>
+        {/* Card 2: Próximo curso */}
+        <Card className="rounded-2xl border-slate-200/60 shadow-sm bg-white overflow-hidden">
+          <CardContent className="p-5 flex flex-col justify-between h-full">
+            <div className="flex items-start justify-between">
+              <div className="flex-1 pr-2">
+                <p className="text-[11px] font-extrabold text-slate-800 mb-1">Próximo curso asignado</p>
+                <h3 className="text-base font-black text-slate-900 leading-tight mb-1 truncate" title={nextCourse?.curso || 'Ninguno'}>
+                  {nextCourse?.curso || 'Sin cursos programados'}
+                </h3>
+                {nextCourse ? (
+                  <>
+                    <p className="text-[11px] font-bold text-slate-500">{nextCourse.aula} - {formatTimeShort(nextCourse.hora_inicio)} a {formatTimeShort(nextCourse.hora_fin)}</p>
+                    <p className="text-[10px] font-semibold text-slate-400 mt-0.5">{DAYS[nextCourse.dia_semana-1]} - 2026-II</p>
+                  </>
+                ) : (
+                  <p className="text-[11px] font-bold text-slate-500">No hay más cursos esta semana</p>
+                )}
+              </div>
+              <div className="h-10 w-10 shrink-0 bg-blue-50 rounded-xl border border-blue-100 flex items-center justify-center">
+                <svg className="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                  <line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
+                </svg>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Card 3: Tardanzas */}
+        <Card className="rounded-2xl border-slate-200/60 shadow-sm bg-white overflow-hidden">
+          <CardContent className="p-5 flex flex-col justify-between h-full">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-[11px] font-extrabold text-slate-800 mb-1">Tardanzas del mes</p>
+                <h3 className="text-[32px] font-black text-amber-500 leading-none">
+                  {String(totalTardanzasMes).padStart(2, '0')}
+                </h3>
+                <p className="text-[10px] font-bold text-slate-500 mt-2 leading-snug w-[85%]">
+                  Ingresos institucionales y sesiones de curso
+                </p>
+              </div>
+              <div className="h-10 w-10 shrink-0 bg-amber-50 rounded-xl border border-amber-100 flex items-center justify-center">
+                <svg className="w-5 h-5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                  <circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" />
+                </svg>
+              </div>
+            </div>
+            <div className="mt-4">
+              <p className="text-[9px] font-bold text-slate-400">Última tardanza: {ultimaTardanzaFecha}</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Card 4: Inasistencias */}
+        <Card className="rounded-2xl border-slate-200/60 shadow-sm bg-white overflow-hidden">
+          <CardContent className="p-5 flex flex-col justify-between h-full">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-[11px] font-extrabold text-slate-800 mb-1">Inasistencias del mes</p>
+                <h3 className="text-[32px] font-black text-red-600 leading-none">
+                  {String(totalAusenciasMes).padStart(2, '0')}
+                </h3>
+                <p className="text-[10px] font-bold text-slate-500 mt-2 leading-snug w-[85%]">
+                  Registros de ausencia en el periodo actual
+                </p>
+              </div>
+              <div className="h-10 w-10 shrink-0 bg-red-50 rounded-xl border border-red-100 flex items-center justify-center">
+                <svg className="w-5 h-5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+            </div>
+            <div className="mt-4">
+              <p className="text-[9px] font-bold text-slate-400">Última ausencia: {ultimaAusenciaFecha}</p>
+            </div>
+          </CardContent>
+        </Card>
+
+      </div>
+
+      {/* Calendario Semanal Visual */}
+      <Card className="rounded-2xl border-slate-200/60 shadow-sm bg-white overflow-hidden">
+        <CardContent className="p-0">
+          {/* Header of Calendar */}
+          <div className="p-6 border-b border-slate-200 flex items-start justify-between">
+            <div>
+              <h2 className="text-xl font-black text-slate-900">Calendario semanal visual</h2>
+              <p className="text-[11px] font-semibold text-slate-500 mt-0.5">Vista por horas, cursos, docentes y aulas del periodo académico seleccionado.</p>
+            </div>
+            <div className="bg-slate-900 text-white text-xs font-bold px-3 py-1.5 rounded-full">
+              {clasesProgramadas} clase(s)
+            </div>
+          </div>
+          
+          {/* Calendar Toolbar */}
+          <div className="bg-black p-4 flex flex-wrap gap-3 items-center">
+            <select className="bg-white border border-slate-300 text-slate-800 text-xs font-bold rounded-md px-3 py-2 flex-1 min-w-[200px] outline-none">
+              <option>Todos los cursos</option>
+            </select>
+            <select className="bg-white border border-slate-300 text-slate-800 text-xs font-bold rounded-md px-3 py-2 flex-1 min-w-[200px] outline-none">
+              <option>Todos los docentes</option>
+            </select>
+            <select className="bg-white border border-slate-300 text-slate-800 text-xs font-bold rounded-md px-3 py-2 flex-1 min-w-[150px] outline-none">
+              <option>Todas las aulas</option>
+            </select>
+            <div className="flex bg-white rounded-md overflow-hidden border border-slate-300 ml-auto">
+              <button className="bg-blue-600 text-white text-xs font-bold px-3 py-2">Calendario</button>
+              <button className="bg-white text-slate-600 text-xs font-bold px-3 py-2 border-l border-slate-200">Tarjetas</button>
+            </div>
+            <button className="bg-white text-slate-800 text-xs font-bold px-4 py-2 rounded-md border border-slate-300 hover:bg-slate-50">Limpiar</button>
+          </div>
+
+          {/* Legend */}
+          <div className="px-6 pt-5 pb-3">
+            <p className="text-[11px] font-extrabold text-slate-800 mb-0.5">Colores por curso</p>
+            <p className="text-[10px] font-medium text-slate-500 mb-3">Pulse un curso para mostrar únicamente sus horarios.</p>
+            <div className="flex flex-wrap gap-2">
+              {uniqueCoursesList.map((curso, i) => (
+                <div key={i} className="flex items-center gap-2 border border-slate-300 rounded-full px-3 py-1 bg-white cursor-pointer hover:bg-slate-50">
+                  <div className="w-2.5 h-2.5 rounded-full bg-black"></div>
+                  <span className="text-[10px] font-bold text-slate-700">{curso}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Grid Layout implementation */}
+          <div className="p-6 overflow-x-auto">
+            <div className="min-w-[800px] border border-black flex flex-col bg-white">
+              
+              {/* Grid Header */}
+              <div className="grid grid-cols-[80px_1fr_1fr_1fr_1fr_1fr] bg-black text-white text-xs font-bold">
+                <div className="py-2.5 px-3 text-left">Hora</div>
+                {["Lun", "Mar", "Mié", "Jue", "Vie"].map((day, i) => (
+                  <div key={day} className="py-2.5 text-center flex items-center justify-center gap-2 border-l border-white/20">
+                    {day} <span className="bg-white text-black text-[10px] rounded-full w-4 h-4 flex items-center justify-center leading-none">1</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Grid Body */}
+              <div className="relative grid grid-cols-[80px_1fr_1fr_1fr_1fr_1fr] min-h-[400px]">
+                {/* Background Grid Lines */}
+                <div className="col-span-6 row-span-full grid grid-cols-[80px_1fr_1fr_1fr_1fr_1fr] absolute inset-0 pointer-events-none">
+                  <div className="border-r border-black/10"></div>
+                  <div className="border-r border-black/10"></div>
+                  <div className="border-r border-black/10"></div>
+                  <div className="border-r border-black/10"></div>
+                  <div className="border-r border-black/10"></div>
+                  <div></div>
+                </div>
+                
+                {/* Horizontal Hour Lines (7am to 9pm) */}
+                <div className="col-span-6 row-span-full absolute inset-0 pointer-events-none flex flex-col">
+                  {[...Array(14)].map((_, i) => (
+                    <div key={i} className="flex-1 border-b border-black/10 flex items-start">
+                       <span className="text-[10px] font-bold text-slate-400 pl-2 pt-1">
+                         {String(7 + i).padStart(2,'0')}:00
+                       </span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Plotting Courses */}
+                {/* 
+                   We will map hours 07:00 to 21:00 to 0-100% height.
+                   Total hours = 14.
+                   Top = (start_hour - 7) / 14 * 100%
+                   Height = duration / 14 * 100%
+                */}
+                <div className="col-start-2 col-end-7 relative w-full h-full pointer-events-auto">
+                  {horariosData.map((h, i) => {
+                    const dayColIndex = h.dia_semana - 1; // 0=Mon, 1=Tue...
+                    if (dayColIndex < 0 || dayColIndex > 4) return null; // Only render Mon-Fri for this view
+
+                    const [sH, sM] = h.hora_inicio.split(':').map(Number);
+                    const [eH, eM] = h.hora_fin.split(':').map(Number);
+                    
+                    const topPct = ((sH + sM/60 - 7) / 14) * 100;
+                    const duration = (eH + eM/60) - (sH + sM/60);
+                    const heightPct = (duration / 14) * 100;
+
+                    return (
+                      <div 
+                        key={i} 
+                        className="absolute p-0.5 z-10"
+                        style={{ 
+                          left: `${(dayColIndex) * 20}%`, 
+                          width: '20%', 
+                          top: `${topPct}%`, 
+                          height: `${heightPct}%` 
+                        }}
+                      >
+                        <div className="bg-black text-white rounded-lg h-full p-2 flex flex-col justify-between overflow-hidden shadow-sm">
+                          <div>
+                            <p className="text-[10px] font-bold opacity-80 leading-tight truncate">{formatTimeShort(h.hora_inicio)} - {formatTimeShort(h.hora_fin)}</p>
+                            <p className="text-xs font-black leading-tight mt-0.5 line-clamp-2">{h.curso}</p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] font-bold opacity-80">{h.aula}</p>
+                            <p className="text-[9px] font-medium opacity-60 truncate">{docenteName}</p>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Grid Footer */}
+              <div className="bg-black text-[9px] text-white/50 p-2 text-left px-3 font-semibold">
+                Cada curso mantiene el mismo color aunque sea impartido por diferentes docentes o en distintos días y aulas.
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Bottom Layout Grid */}
+      <div className="grid grid-cols-1 xl:grid-cols-[1fr_300px] gap-6">
+        
+        <div className="space-y-6 flex flex-col">
+          {/* Próxima actividad académica */}
+          <Card className="rounded-2xl border-slate-200/60 shadow-sm bg-white overflow-hidden">
+            <div className="p-5 border-b border-slate-200 bg-slate-50/50">
+              <h3 className="text-[15px] font-extrabold text-slate-800">Próxima actividad académica</h3>
+              <p className="text-[11px] font-semibold text-slate-500 mt-0.5">Detalles de la siguiente sesion programada.</p>
+            </div>
+            <CardContent className="p-5 flex flex-col gap-4">
+              {nextCourse ? (
+                <>
+                  <div className="bg-slate-50 rounded-xl p-5 border border-slate-100 flex flex-col gap-4 relative">
+                    <div className="absolute top-4 right-4 bg-blue-100 text-blue-700 font-bold text-[10px] px-2.5 py-1 rounded-full">
+                      {timeToNextCourse}
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-black text-slate-900">{nextCourse.curso}</h4>
+                      <p className="text-[11px] font-bold text-slate-500 mt-0.5">{(nextCourse as any).departamento || ""}</p>
+                    </div>
+                    <div className="grid grid-cols-3 gap-4">
+                      <div>
+                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Aula</p>
+                        <p className="text-xs font-black text-slate-700">{nextCourse.aula}</p>
+                      </div>
+                      <div>
+                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Horario</p>
+                        <p className="text-xs font-black text-slate-700">{formatTimeShort(nextCourse.hora_inicio)} - {formatTimeShort(nextCourse.hora_fin)}</p>
+                      </div>
+                      <div>
+                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Día</p>
+                        <p className="text-xs font-black text-slate-700">{DAYS[nextCourse.dia_semana-1]}</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
+                    <p className="text-[10px] font-bold text-slate-800 mb-1">Recordatorio</p>
+                    <p className="text-[10px] font-semibold text-slate-500">Verifique su marcacion de ingreso antes de iniciar la sesion y confirme que el dispositivo movil se encuentre sincronizado.</p>
+                  </div>
+                  <Button variant="primary" className="w-full bg-orange-500 hover:bg-orange-600 text-white border-none font-black text-xs py-2 shadow-sm rounded-lg">
+                    Ver horario y asistencia
+                  </Button>
+                </>
+              ) : (
+                <div className="p-4 text-center text-slate-500 text-sm font-semibold bg-slate-50 rounded-xl border border-slate-100">
+                  No hay próximas actividades académicas programadas para mostrar.
+                </div>
+              )}
             </CardContent>
           </Card>
 
-          <Card className="flex flex-col flex-1">
-            <CardHeader title="Resumen de la semana" />
-            <CardContent className="pt-2">
-              <div className="grid grid-cols-2 gap-3 mb-4">
-                 <div className="rounded-xl border border-unsaac-border p-3 text-center bg-slate-50">
-                    <p className="text-[10px] font-black uppercase text-unsaac-muted tracking-wide mb-1">Clases programadas</p>
-                    <p className="text-2xl font-black text-unsaac-blue">05</p>
-                 </div>
-                 <div className="rounded-xl border border-unsaac-border p-3 text-center bg-slate-50">
-                    <p className="text-[10px] font-black uppercase text-unsaac-muted tracking-wide mb-1">Asistencias exitosas</p>
-                    <p className="text-2xl font-black text-unsaac-green">{formatNumber(asistenciaData?.ingresos.length || 0)}</p>
-                 </div>
-              </div>
-            </CardContent>
+          {/* Últimas marcaciones */}
+          <Card className="rounded-2xl border-slate-200/60 shadow-sm bg-white overflow-hidden flex-1">
+            <div className="p-5 border-b border-slate-200 bg-slate-50/50">
+              <h3 className="text-[15px] font-extrabold text-slate-800">Ultimas marcaciones</h3>
+              <p className="text-[11px] font-semibold text-slate-500 mt-0.5">Ingreso institucional y asistencias de curso registradas recientemente.</p>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-[11px]">
+                <thead className="bg-white border-b border-slate-200">
+                  <tr>
+                    <th className="px-5 py-3 font-extrabold text-slate-800">Fecha</th>
+                    <th className="px-5 py-3 font-extrabold text-slate-800">Hora</th>
+                    <th className="px-5 py-3 font-extrabold text-slate-800">Tipo de marcacion</th>
+                    <th className="px-5 py-3 font-extrabold text-slate-800">Detalle</th>
+                    <th className="px-5 py-3 font-extrabold text-slate-800 text-center">Resultado</th>
+                    <th className="px-5 py-3 font-extrabold text-slate-800 text-right">Metodo</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {marcaciones.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="px-5 py-8 text-center text-slate-500 font-semibold">No hay marcaciones recientes</td>
+                    </tr>
+                  ) : (
+                    marcaciones.slice(0, 4).map((m, idx) => (
+                      <tr key={idx} className="hover:bg-slate-50 transition-colors">
+                        <td className="px-5 py-4 font-bold text-slate-700">{formatDate(m.fecha)}</td>
+                        <td className="px-5 py-4 font-black text-slate-700">{formatTimeShort(m.hora)}</td>
+                        <td className="px-5 py-4 font-bold text-slate-700">{m.tipo}</td>
+                        <td className="px-5 py-4 font-semibold text-slate-500 truncate max-w-[200px]">{m.detalle}</td>
+                        <td className="px-5 py-4 text-center">
+                           <span className={`px-2 py-1 rounded-[4px] text-[9px] font-black tracking-wide ${m.resultado === "TARDANZA" ? "bg-amber-100 text-amber-700" : m.resultado === "PRESENTE" || m.resultado === "PUNTUAL" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
+                             {m.resultado.charAt(0).toUpperCase() + m.resultado.slice(1).toLowerCase()}
+                           </span>
+                        </td>
+                        <td className="px-5 py-4 font-semibold text-slate-500 text-right">{m.metodo}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
           </Card>
         </div>
 
-      </section>
+        {/* Resumen de la semana */}
+        <Card className="rounded-2xl border-slate-200/60 shadow-sm bg-white overflow-hidden h-fit">
+          <div className="p-5 border-b border-slate-200 bg-slate-50/50">
+            <h3 className="text-[15px] font-extrabold text-slate-800">Resumen de la semana</h3>
+            <p className="text-[11px] font-semibold text-slate-500 mt-0.5">Indicadores rapidos de cumplimiento y programacion.</p>
+          </div>
+          <CardContent className="p-5 flex flex-col gap-4">
+            <div className="flex gap-4">
+              <div className="flex-1 bg-slate-50 border border-slate-100 rounded-xl p-4">
+                <p className="text-[10px] font-extrabold text-slate-700 mb-2">Clases programadas</p>
+                <p className="text-3xl font-black text-blue-600">{clasesProgramadas}</p>
+              </div>
+              <div className="flex-1 bg-slate-50 border border-slate-100 rounded-xl p-4">
+                <p className="text-[10px] font-extrabold text-slate-700 mb-2">Clases registradas</p>
+                <p className="text-3xl font-black text-green-600">{clasesRegistradas}</p>
+              </div>
+            </div>
+
+            <div className="bg-slate-50 border border-slate-100 rounded-xl p-4 mt-2">
+              <p className="text-[10px] font-bold text-slate-800 mb-1">Recordatorio academico</p>
+              {nextCourse ? (
+                 <p className="text-[10px] font-semibold text-slate-500 leading-snug">
+                   {DAYS[nextCourse.dia_semana-1]} tiene {nextCourse.curso} a las {formatTimeShort(nextCourse.hora_inicio)} en {nextCourse.aula}. Revise sus horarios y mantenga la aplicacion movil sincronizada.
+                 </p>
+              ) : (
+                 <p className="text-[10px] font-semibold text-slate-500 leading-snug">
+                   No hay clases próximas programadas.
+                 </p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+      </div>
+
     </div>
   );
-}
-
-function MiniTrend({ values, colorHex }: { values: number[]; colorHex: string }) {
-  const max = Math.max(...values, 5);
-  const min = Math.min(...values, 0);
-  const range = Math.max(max - min, 1);
-
-  const points = values
-    .map((value, index) => {
-      const x = index * (280 / (values.length - 1));
-      const y = 30 - ((value - min) / range) * 22;
-      return `${x},${y}`;
-    })
-    .join(" ");
-
-  return (
-    <svg className="h-10 w-full" viewBox="0 0 280 32" fill="none" preserveAspectRatio="none">
-      <polyline
-        points={points}
-        fill="none"
-        stroke={colorHex}
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-function DashboardIcon({ name, className }: { name: string; className?: string }) {
-  if (name === "check-circle") {
-    return (
-      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-        <polyline points="22 4 12 14.01 9 11.01" />
-      </svg>
-    );
-  }
-  if (name === "clock") {
-    return (
-      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="12" r="10" />
-        <polyline points="12 6 12 12 16 14" />
-      </svg>
-    );
-  }
-  if (name === "calendar") {
-    return (
-      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-        <line x1="16" y1="2" x2="16" y2="6" />
-        <line x1="8" y1="2" x2="8" y2="6" />
-        <line x1="3" y1="10" x2="21" y2="10" />
-      </svg>
-    );
-  }
-  if (name === "clock-alert") {
-    return (
-      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="12" r="10" />
-        <polyline points="12 6 12 12 16 14" />
-        <line x1="12" y1="2" x2="12" y2="4" />
-      </svg>
-    );
-  }
-  if (name === "alert-triangle") {
-    return (
-      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-        <line x1="12" y1="9" x2="12" y2="13" />
-        <line x1="12" y1="17" x2="12.01" y2="17" />
-      </svg>
-    );
-  }
-  if (name === "fingerprint") {
-    return (
-      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M2 12C2 17.5 6.5 22 12 22s10-4.5 10-10S17.5 2 12 2a10 10 0 0 0-7.3 3.1" />
-        <path d="M5.5 8a8.5 8.5 0 0 1 13 0" />
-        <path d="M8 12a4.5 4.5 0 0 1 8 0" />
-        <path d="M10.5 15a1.5 1.5 0 0 1 3 0" />
-      </svg>
-    );
-  }
-  return null;
 }
