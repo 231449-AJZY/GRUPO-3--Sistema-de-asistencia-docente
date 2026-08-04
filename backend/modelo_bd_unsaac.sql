@@ -158,6 +158,44 @@ CREATE TRIGGER trg_max_cursos
 BEFORE INSERT ON horarios_curso
 FOR EACH ROW EXECUTE FUNCTION validar_max_cursos_docente();
 
+
+-- =============================================================
+-- TABLA: configuracion_institucional
+-- Datos generales y reglas complementarias del sistema
+-- =============================================================
+CREATE TABLE configuracion_institucional (
+    id                          SMALLINT PRIMARY KEY DEFAULT 1,
+    nombre_sistema              VARCHAR(150) NOT NULL,
+    nombre_institucion          VARCHAR(200) NOT NULL,
+    codigo_institucional        VARCHAR(20)  NOT NULL,
+    correo_soporte              VARCHAR(150) NOT NULL,
+    zona_horaria                VARCHAR(80)  NOT NULL DEFAULT 'America/Lima',
+    idioma                      VARCHAR(30)  NOT NULL DEFAULT 'Español',
+    requiere_salida             BOOLEAN      NOT NULL DEFAULT TRUE,
+    permitir_validacion_manual  BOOLEAN      NOT NULL DEFAULT TRUE,
+    limite_tardanza_minutos     INT          NOT NULL DEFAULT 20,
+    actualizado_en              TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    actualizado_por             INT REFERENCES usuarios(id) ON DELETE SET NULL,
+    CONSTRAINT chk_configuracion_unica CHECK (id = 1),
+    CONSTRAINT chk_limite_tardanza CHECK (
+        limite_tardanza_minutos BETWEEN 1 AND 240
+    )
+);
+
+INSERT INTO configuracion_institucional (
+    id,
+    nombre_sistema,
+    nombre_institucion,
+    codigo_institucional,
+    correo_soporte
+) VALUES (
+    1,
+    'Sistema de Asistencia Docente',
+    'Universidad Nacional de San Antonio Abad del Cusco',
+    'UNSAAC',
+    'soporte@unsaac.edu.pe'
+);
+
 -- =============================================================
 -- TABLA: configuracion_asistencia
 -- Parámetros globales configurables por el Administrador

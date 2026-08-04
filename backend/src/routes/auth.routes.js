@@ -27,38 +27,79 @@ const FUNCIONALIDADES = {
   ],
 };
 
+function toNullableNumber(value) {
+  if (value === null || value === undefined || value === '') return null;
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+}
+
+function buildSessionUser(row) {
+  const usuarioId = Number(row.id);
+  const docenteId = toNullableNumber(row.docente_id);
+
+  return {
+    id: usuarioId,
+    usuario_id: usuarioId,
+    docente_id: docenteId,
+    nombres: row.nombres,
+    apellidos: row.apellidos,
+    email: row.email,
+    codigo: row.codigo,
+    rol: row.rol,
+  };
+}
+
 // POST /api/auth/login
 router.post('/login', async (req, res) => {
   const { username, password } = req.body;
-  if (!username || !password)
+
+  if (!username || !password) {
     return res.status(400).json({ error: 'Usuario y contraseña requeridos' });
+  }
+
   try {
     const result = await pool.query(
       `SELECT u.id, u.nombres, u.apellidos, u.email, u.codigo,
-              u.contrasena_hash, u.activo, r.nombre AS rol
+              u.contrasena_hash, u.activo, r.nombre AS rol,
+              d.id AS docente_id
        FROM usuarios u
        JOIN roles r ON r.id = u.rol_id
-       WHERE (u.email = $1 OR u.codigo = $1)`,
-      [username]
+       LEFT JOIN docentes d ON d.usuario_id = u.id
+       WHERE (LOWER(u.email) = LOWER($1) OR u.codigo = $1)`,
+      [String(username).trim()]
     );
-    if (result.rows.length === 0)
+
+    if (result.rows.length === 0) {
       return res.status(401).json({ error: 'Credenciales incorrectas' });
+    }
+
     const user = result.rows[0];
-    if (!user.activo)
+
+    if (!user.activo) {
       return res.status(403).json({ error: 'Usuario inactivo. Contacte al administrador.' });
+    }
+
     const ok = await bcrypt.compare(password, user.contrasena_hash);
-    if (!ok)
+
+    if (!ok) {
       return res.status(401).json({ error: 'Credenciales incorrectas' });
+    }
+
+    const sessionUser = buildSessionUser(user);
+
     const token = jwt.sign(
-      { id: user.id, rol: user.rol, nombres: user.nombres },
+      {
+        id: sessionUser.usuario_id,
+        usuario_id: sessionUser.usuario_id,
+        docente_id: sessionUser.docente_id,
+        rol: sessionUser.rol,
+        nombres: sessionUser.nombres,
+      },
       process.env.JWT_SECRET,
       { expiresIn: '8h' }
     );
-    res.json({
-      token,
-      user: { id: user.id, nombres: user.nombres, apellidos: user.apellidos,
-              email: user.email, codigo: user.codigo, rol: user.rol }
-    });
+
+    res.json({ token, user: sessionUser });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Error interno del servidor' });
@@ -70,18 +111,31 @@ router.get('/me', autenticar, async (req, res) => {
   try {
     const result = await pool.query(
       `SELECT u.id, u.codigo, u.nombres, u.apellidos, u.email, u.activo,
-              r.nombre AS rol, d.categoria, d.condicion,
+              r.nombre AS rol, d.id AS docente_id, d.categoria, d.condicion,
               dep.nombre AS departamento
        FROM usuarios u
        JOIN roles r ON r.id = u.rol_id
-       LEFT JOIN docentes d   ON d.usuario_id = u.id
+       LEFT JOIN docentes d ON d.usuario_id = u.id
        LEFT JOIN departamentos_academicos dep ON dep.id = d.departamento_id
        WHERE u.id = $1`,
-      [req.user.id]
+      [req.user.usuario_id]
     );
-    if (result.rows.length === 0)
+
+    if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Usuario no encontrado' });
-    res.json({ user: result.rows[0] });
+    }
+
+    const row = result.rows[0];
+
+    res.json({
+      user: {
+        ...buildSessionUser(row),
+        activo: row.activo,
+        categoria: row.categoria,
+        condicion: row.condicion,
+        departamento: row.departamento,
+      },
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Error interno del servidor' });
@@ -91,8 +145,11 @@ router.get('/me', autenticar, async (req, res) => {
 // GET /api/auth/funcionalidades
 router.get('/funcionalidades', autenticar, (req, res) => {
   const menu = FUNCIONALIDADES[req.user.rol];
-  if (!menu)
+
+  if (!menu) {
     return res.status(403).json({ error: 'Rol no reconocido' });
+  }
+
   res.json({ rol: req.user.rol, funcionalidades: menu });
 });
 
