@@ -33,10 +33,10 @@ const menuByRole: Record<UserRole, MenuItem[]> = {
     { label: "Ingreso institucional", key: "ingreso", href: "/login/PanelDocente/asistencia/ingreso" },
     { label: "Asistencia a cursos", key: "asistencia", href: "/login/PanelDocente/asistencia" },
     { label: "Historial", key: "historial", href: "/login/PanelDocente/asistencia/historial" },
-    { label: "Tardanzas", key: "tardanzas", href: "/docente/tardanzas" },
-    { label: "Inasistencias", key: "inasistencias", href: "/docente/inasistencias" },
-    { label: "Calendario", key: "calendario", href: "/docente/calendario" },
-    { label: "Horarios", key: "horarios", href: "/docente/horarios" },
+    { label: "Tardanzas", key: "tardanzas", href: "/login/PanelDocente/tardanzas" },
+    { label: "Inasistencias", key: "inasistencias", href: "/login/PanelDocente/inasistencias" },
+    { label: "Calendario", key: "calendario", href: "/login/PanelDocente/calendario" },
+    { label: "Horarios", key: "horarios", href: "/login/PanelDocente/horarios" },
   ],
 
   SUPERVISOR: [
