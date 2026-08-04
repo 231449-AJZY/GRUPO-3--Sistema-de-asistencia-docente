@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import styles from "./page.module.css";
+import Card, { CardContent, CardHeader } from "@/components/ui/Card";
+import Badge from "@/components/ui/Badge";
 
 interface UserData {
   nombres: string;
@@ -79,7 +80,7 @@ export default function SupervisorDashboard() {
     }
   }, []);
 
-  // --- Procesamiento de Datos Reales ---
+  // --- Real-time data processing ---
   const totalDocentes = stats?.docentes ? parseInt(stats.docentes.total) : 0;
   const totalActivos = stats?.docentes ? parseInt(stats.docentes.activos) : 0;
   
@@ -90,30 +91,26 @@ export default function SupervisorDashboard() {
   const inasistenciasHoy = Math.max(0, totalActivos - totalMarcacionesHoy);
   const percentAsistencia = totalActivos > 0 ? Math.round((totalMarcacionesHoy / totalActivos) * 100) : 0;
 
-  // --- Generación Dinámica del Gráfico de Marcaciones por Hora ---
+  // --- Chart processing ---
   const chartHours = [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17];
   const hourlyCounts = chartHours.map((h) => {
     const prefix = `${String(h).padStart(2, "0")}:`;
     return asistenciaHoy?.registros.filter((r) => r.hora_registro.startsWith(prefix)).length || 0;
   });
 
-  const maxCount = Math.max(...hourlyCounts, 1); // Evitar división por cero
+  const maxCount = Math.max(...hourlyCounts, 5); // Avoid division by zero and give head room
   
-  // Mapeo a coordenadas SVG (x de 40 a 480, y de 140 a 40)
   const chartPoints = chartHours.map((h, i) => {
-    const x = 40 + (i * (440 / (chartHours.length - 1)));
-    const y = 140 - (hourlyCounts[i] * (100 / maxCount));
+    const x = 50 + (i * (800 / (chartHours.length - 1)));
+    const y = 190 - (hourlyCounts[i] * (150 / maxCount));
     return { x, y, hour: `${String(h).padStart(2, "0")}:00`, count: hourlyCounts[i] };
   });
 
   let linePath = "";
   let areaPath = "";
   if (chartPoints.length > 0) {
-    linePath = `M ${chartPoints[0].x} ${chartPoints[0].y}`;
-    for (let i = 1; i < chartPoints.length; i++) {
-      linePath += ` L ${chartPoints[i].x} ${chartPoints[i].y}`;
-    }
-    areaPath = `${linePath} L ${chartPoints[chartPoints.length - 1].x} 140 L ${chartPoints[0].x} 140 Z`;
+    linePath = chartPoints.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x},${p.y}`).join(" ");
+    areaPath = `${linePath} L ${chartPoints[chartPoints.length - 1].x},190 L ${chartPoints[0].x},190 Z`;
   }
 
   function formatTime(timeStr: string) {
@@ -121,340 +118,334 @@ export default function SupervisorDashboard() {
     return timeStr.slice(0, 8); // Mostrar HH:MM:SS
   }
 
+  function formatNumber(num: number) {
+    return num < 10 ? `0${num}` : `${num}`;
+  }
+
   if (loading) {
     return (
-      <div className={styles.dashboardContainer} style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "80vh", color: "#fff" }}>
-        <div style={{ textAlign: "center" }}>
-          <i className="fa-solid fa-circle-notch fa-spin fa-3x" style={{ color: "#f58025", marginBottom: "1rem" }}></i>
-          <p>Cargando información del supervisor...</p>
-        </div>
+      <div className="flex min-h-[60vh] flex-col items-center justify-center">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-unsaac-orange/30 border-t-unsaac-orange" />
+        <p className="mt-4 text-sm font-bold text-unsaac-muted">Cargando información del supervisor...</p>
       </div>
     );
   }
 
   return (
-    <div className={styles.dashboardContainer}>
+    <div className="admin-dashboard-animated space-y-6">
       {/* Title Section */}
-      <div className={styles.titleSection}>
-        <h1>Dashboard del supervisor</h1>
-        <p>Monitoreo general de asistencia, alertas e incidencias del sistema biométrico</p>
+      <div>
+        <h1 className="text-[34px] font-extrabold leading-tight text-unsaac-text">
+          Panel principal del supervisor
+        </h1>
+        <p className="mt-1 text-base font-semibold text-unsaac-muted">
+          Monitoreo en tiempo real de asistencia, alertas e incidencias del sistema
+        </p>
       </div>
 
-      {/* Metric Cards Grid */}
-      <div className={styles.metricGrid}>
-        {/* Card 1: Asistencias en TR */}
-        <div className={styles.metricCard}>
-          <div className={styles.cardHeader}>
-            <span className={styles.cardTitle}>Marcaciones de Hoy</span>
-            <div className={`${styles.cardIcon} ${styles.iconBlue}`}>
-              <i className="fas fa-heartbeat"></i>
+      {/* Metrics Grid */}
+      <section className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
+        
+        {/* Metric 1: Marcaciones */}
+        <Card className="overflow-hidden flex flex-col justify-between h-full p-6">
+          <div className="flex items-start gap-4">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-600 border border-blue-100">
+              <DashboardIcon name="fingerprint" className="h-6 w-6" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <h3 className="text-sm font-extrabold text-unsaac-muted truncate">
+                Marcaciones de hoy
+              </h3>
+              <p className="mt-1 text-3xl font-black leading-none text-blue-600">
+                {formatNumber(totalMarcacionesHoy)}
+              </p>
+              <p className="mt-1 text-xs font-bold text-unsaac-muted">
+                Puntuales: {totalPuntualesHoy} · Tardanzas: {totalTardanzasHoy}
+              </p>
             </div>
           </div>
-          <div className={styles.cardBody}>
-            <span className={styles.cardValue}>{totalMarcacionesHoy}</span>
-            <span className={styles.cardSub}>
-              De los docentes activos hoy
-            </span>
+          <div className="mt-4 -mx-6 -mb-6">
+            <MiniTrend values={[10, 25, 45, totalMarcacionesHoy > 0 ? totalMarcacionesHoy : 10]} colorHex="#2563EB" />
           </div>
-        </div>
+        </Card>
 
-        {/* Card 2: Docentes Presentes */}
-        <div className={styles.metricCard}>
-          <div className={styles.cardHeader}>
-            <span className={styles.cardTitle}>Docentes Puntuales</span>
-            <div className={`${styles.cardIcon} ${styles.iconGreen}`}>
-              <i className="fas fa-user-check"></i>
+        {/* Metric 2: Activos */}
+        <Card className="overflow-hidden flex flex-col justify-between h-full p-6">
+          <div className="flex items-start gap-4">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-green-50 text-green-600 border border-green-100">
+              <DashboardIcon name="users" className="h-6 w-6" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <h3 className="text-sm font-extrabold text-unsaac-muted truncate">
+                Docentes activos
+              </h3>
+              <p className="mt-1 text-3xl font-black leading-none text-green-600">
+                {formatNumber(totalActivos)}
+              </p>
+              <p className="mt-1 text-xs font-bold text-unsaac-muted">
+                De un total de {totalDocentes} registrados
+              </p>
             </div>
           </div>
-          <div className={styles.cardBody}>
-            <span className={styles.cardValue}>{totalPuntualesHoy}</span>
-            <span className={styles.cardSub}>{percentAsistencia}% de asistencia registrada</span>
-            <div className={styles.sparklineWrapper}>
-              <svg viewBox="0 0 100 30" width="100%" height="100%" preserveAspectRatio="none">
-                <path
-                  d="M0,25 Q15,5 30,20 T60,10 T90,18 T100,5"
-                  fill="none"
-                  stroke="#22c55e"
-                  strokeWidth="2"
-                />
-                <path
-                  d="M0,25 Q15,5 30,20 T60,10 T90,18 T100,5 L100,30 L0,30 Z"
-                  fill="rgba(34,197,94,0.08)"
-                />
-              </svg>
-            </div>
+          <div className="mt-4 -mx-6 -mb-6">
+            <MiniTrend values={[totalActivos - 5, totalActivos - 2, totalActivos]} colorHex="#16A34A" />
           </div>
-        </div>
+        </Card>
 
-        {/* Card 3: Docentes Ausentes */}
-        <div className={styles.metricCard}>
-          <div className={styles.cardHeader}>
-            <span className={styles.cardTitle}>Inasistencias</span>
-            <div className={`${styles.cardIcon} ${styles.iconRed}`}>
-              <i className="fas fa-user-times"></i>
+        {/* Metric 3: Inasistencias */}
+        <Card className="overflow-hidden flex flex-col justify-between h-full p-6">
+          <div className="flex items-start gap-4">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-red-50 text-red-600 border border-red-100">
+              <DashboardIcon name="alert-triangle" className="h-6 w-6" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <h3 className="text-sm font-extrabold text-unsaac-muted truncate">
+                Inasistencias hoy
+              </h3>
+              <p className="mt-1 text-3xl font-black leading-none text-red-600">
+                {formatNumber(inasistenciasHoy)}
+              </p>
+              <p className="mt-1 text-xs font-bold text-unsaac-muted">
+                Docentes sin registrar asistencia
+              </p>
             </div>
           </div>
-          <div className={styles.cardBody}>
-            <span className={styles.cardValue}>{inasistenciasHoy}</span>
-            <span className={styles.cardSub}>Docentes sin marcación</span>
-            <div className={styles.sparklineWrapper}>
-              <svg viewBox="0 0 100 30" width="100%" height="100%" preserveAspectRatio="none">
-                <path
-                  d="M0,10 Q15,28 30,15 T60,25 T90,12 T100,22"
-                  fill="none"
-                  stroke="#ef4444"
-                  strokeWidth="2"
-                />
-                <path
-                  d="M0,10 Q15,28 30,15 T60,25 T90,12 T100,22 L100,30 L0,30 Z"
-                  fill="rgba(239,68,68,0.08)"
-                />
-              </svg>
+          <div className="mt-4 -mx-6 -mb-6">
+            <MiniTrend values={[inasistenciasHoy > 5 ? inasistenciasHoy - 2 : 0, inasistenciasHoy]} colorHex="#DC2626" />
+          </div>
+        </Card>
+
+        {/* Metric 4: Nivel Asistencia */}
+        <Card className="overflow-hidden flex flex-col justify-between h-full p-6">
+          <div className="flex items-start gap-4">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-amber-50 text-amber-500 border border-amber-100">
+              <DashboardIcon name="activity" className="h-6 w-6" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <h3 className="text-sm font-extrabold text-unsaac-muted truncate">
+                Nivel de asistencia
+              </h3>
+              <p className="mt-1 text-3xl font-black leading-none text-amber-500">
+                {percentAsistencia}%
+              </p>
+              <p className="mt-1 text-xs font-bold text-unsaac-muted">
+                Ratio de cumplimiento de hoy
+              </p>
             </div>
           </div>
-        </div>
-
-        {/* Card 4: Tardanzas del día */}
-        <div className={styles.metricCard}>
-          <div className={styles.cardHeader}>
-            <span className={styles.cardTitle}>Tardanzas de Hoy</span>
-            <div className={`${styles.cardIcon} ${styles.iconOrange}`}>
-              <i className="fas fa-history"></i>
+          <div className="mt-4 -mx-6 -mb-6">
+            <div className="h-10 w-full px-6 flex items-end pb-2">
+              <div className="w-full bg-slate-100 rounded-full h-2">
+                <div className="bg-amber-500 h-2 rounded-full" style={{ width: `${percentAsistencia}%` }}></div>
+              </div>
             </div>
           </div>
-          <div className={styles.cardBody}>
-            <span className={styles.cardValue}>{totalTardanzasHoy}</span>
-            <span className={styles.cardSub}>
-              Requieren seguimiento o justificación
-            </span>
-          </div>
-        </div>
+        </Card>
 
-        {/* Card 5: Docentes Registrados */}
-        <div className={styles.metricCard}>
-          <div className={styles.cardHeader}>
-            <span className={styles.cardTitle}>Total Docentes</span>
-            <div className={`${styles.cardIcon} ${styles.iconRedShield}`}>
-              <i className="fas fa-users"></i>
-            </div>
-          </div>
-          <div className={styles.cardBody}>
-            <span className={styles.cardValue}>{totalDocentes}</span>
-            <span className={styles.cardSub}>{totalActivos} activos en el sistema</span>
-          </div>
-        </div>
-      </div>
+      </section>
 
-      {/* Middle Row: Chart & Recent Alerts */}
-      <div className={styles.middleRow}>
-        {/* Activity Chart Section */}
-        <div className={styles.dashboardSection}>
-          <div className={styles.sectionHeader}>
-            <span className={styles.sectionTitle}>
-              <i className="fas fa-chart-line" style={{ color: "#3b82f6" }}></i>
-              Actividad diaria de marcaciones (En vivo)
-            </span>
-          </div>
-          <div className={styles.chartContainer}>
-            <svg viewBox="0 0 500 180" width="100%" height="100%">
-              {/* Grid Lines */}
-              <line x1="40" y1="20" x2="480" y2="20" stroke="#f1f5f9" strokeWidth="1" />
-              <line x1="40" y1="60" x2="480" y2="60" stroke="#f1f5f9" strokeWidth="1" />
-              <line x1="40" y1="100" x2="480" y2="100" stroke="#f1f5f9" strokeWidth="1" />
-              <line x1="40" y1="140" x2="480" y2="140" stroke="#e2e8f0" strokeWidth="1.5" />
+      {/* Main Grid: Chart and Table */}
+      <section className="grid grid-cols-1 gap-5 xl:grid-cols-2">
+        
+        {/* Hourly Chart */}
+        <Card className="flex flex-col overflow-hidden">
+          <CardHeader
+            title="Marcaciones biométricas por hora"
+            description="Distribución de ingresos en el día"
+          />
+          <CardContent className="pt-2">
+            <svg viewBox="0 0 880 230" className="h-[260px] w-full" preserveAspectRatio="none">
+              {/* Horizontal Grid lines */}
+              {[0, maxCount * 0.25, maxCount * 0.5, maxCount * 0.75, maxCount].map((value) => {
+                const y = 190 - (value / maxCount) * 150;
+                return (
+                  <g key={value}>
+                    <line x1="45" y1={y} x2="855" y2={y} stroke="#E2E8F0" strokeWidth="1" />
+                    <text x="30" y={y + 4} textAnchor="end" className="fill-unsaac-muted text-[11px] font-bold">
+                      {Math.round(value)}
+                    </text>
+                  </g>
+                );
+              })}
 
-              {/* Chart Line Path */}
+              {/* Area under curve */}
+              {areaPath && <polygon points={areaPath} fill="#2563EB" opacity="0.08" />}
+
+              {/* Connection line */}
               {linePath && (
                 <path
                   d={linePath}
                   fill="none"
-                  stroke="#3b82f6"
-                  strokeWidth="3"
+                  stroke="#2563EB"
+                  strokeWidth="3.2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                 />
               )}
 
-              {/* Area Path */}
-              {areaPath && (
-                <path
-                  d={areaPath}
-                  fill="url(#chartGrad)"
-                  opacity="0.15"
-                />
-              )}
-
-              {/* Indicator Dots */}
-              {chartPoints.map((pt, i) => (
-                <g key={i}>
-                  <circle cx={pt.x} cy={pt.y} r="4" fill="#3b82f6" stroke="#ffffff" strokeWidth="1.5" />
-                  <title>{`${pt.hour}: ${pt.count} marcaciones`}</title>
+              {/* Data Points */}
+              {chartPoints.map((p, index) => (
+                <g key={index}>
+                  <circle cx={p.x} cy={p.y} r="4.5" fill="#2563EB" stroke="#FFFFFF" strokeWidth="1.5" />
+                  <text x={p.x} y="215" textAnchor="middle" className="fill-unsaac-muted text-[11px] font-bold">
+                    {p.hour}
+                  </text>
                 </g>
               ))}
-
-              {/* Time Indicators */}
-              {chartPoints.filter((_, idx) => idx % 2 === 0 || idx === chartPoints.length - 1).map((pt, i) => (
-                <text key={i} x={pt.x} y="160" fill="#94a3b8" fontSize="10" textAnchor="middle">
-                  {pt.hour}
-                </text>
-              ))}
-
-              {/* Y Axis Values */}
-              <text x="30" y="24" fill="#94a3b8" fontSize="10" textAnchor="end">{maxCount}</text>
-              <text x="30" y="80" fill="#94a3b8" fontSize="10" textAnchor="end">{Math.round(maxCount / 2)}</text>
-              <text x="30" y="144" fill="#94a3b8" fontSize="10" textAnchor="end">0</text>
-
-              {/* Definitions */}
-              <defs>
-                <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#3b82f6" />
-                  <stop offset="100%" stopColor="#ffffff" />
-                </linearGradient>
-              </defs>
             </svg>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
-        {/* Alerts Section (Static template, since DB alerts are handled via triggers/notifs) */}
-        <div className={styles.dashboardSection}>
-          <div className={styles.sectionHeader}>
-            <span className={styles.sectionTitle}>
-              <i className="fas fa-bell" style={{ color: "#ef4444" }}></i>
-              Alertas recientes
-            </span>
-          </div>
-          <div className={styles.alertList}>
-            {totalTardanzasHoy > 0 ? (
-              <div className={styles.alertItem}>
-                <div className={`${styles.alertIcon} ${styles.iconOrange}`}>
-                  <i className="fas fa-clock"></i>
-                </div>
-                <div className={styles.alertContent}>
-                  <div className={styles.alertMeta}>
-                    <span className={styles.alertTitle}>Tardanza detectada</span>
-                    <span className={styles.alertTime}>Hoy</span>
-                  </div>
-                  <span className={styles.alertText}>Existen {totalTardanzasHoy} docentes con retraso hoy.</span>
-                </div>
+        {/* Recent Registrations Table */}
+        <Card className="flex flex-col overflow-hidden">
+          <CardHeader
+            title="Registros en tiempo real"
+            description="Últimos docentes en marcar asistencia"
+            action={
+              <div className="flex items-center gap-1.5 rounded-full bg-green-50 px-2.5 py-1 text-xs font-black text-green-700">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                </span>
+                En vivo
               </div>
-            ) : null}
-
-            {inasistenciasHoy > 0 ? (
-              <div className={styles.alertItem}>
-                <div className={`${styles.alertIcon} ${styles.iconRed}`}>
-                  <i className="fas fa-user-slash"></i>
-                </div>
-                <div className={styles.alertContent}>
-                  <div className={styles.alertMeta}>
-                    <span className={styles.alertTitle}>Inasistencias detectadas</span>
-                    <span className={styles.alertTime}>Hoy</span>
-                  </div>
-                  <span className={styles.alertText}>Hay {inasistenciasHoy} docentes sin registrar ingreso hoy.</span>
-                </div>
-              </div>
-            ) : (
-              <div className={styles.alertItem}>
-                <div className={`${styles.alertIcon} ${styles.iconBlue}`}>
-                  <i className="fas fa-check-double"></i>
-                </div>
-                <div className={styles.alertContent}>
-                  <div className={styles.alertMeta}>
-                    <span className={styles.alertTitle}>Sistema Operativo</span>
-                    <span className={styles.alertTime}>OK</span>
-                  </div>
-                  <span className={styles.alertText}>Sin anomalías críticas registradas.</span>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Bottom Row: Table & Devices */}
-      <div className={styles.bottomRow}>
-        {/* Real-time activity table */}
-        <div className={styles.dashboardSection} style={{ flex: 2 }}>
-          <div className={styles.sectionHeader}>
-            <span className={styles.sectionTitle}>
-              <i className="fas fa-list-ul" style={{ color: "#f58025" }}></i>
-              Resumen de actividad en tiempo real
-            </span>
-          </div>
-          <div className={styles.tableContainer}>
-            <table className={styles.activityTable}>
+            }
+          />
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm border-collapse">
               <thead>
-                <tr>
-                  <th>Docente</th>
-                  <th>Hora</th>
-                  <th>Estado</th>
-                  <th>Departamento</th>
-                  <th>Método</th>
+                <tr className="border-y border-unsaac-border bg-slate-50/50">
+                  <th className="px-5 py-3.5 font-extrabold text-unsaac-muted">Docente</th>
+                  <th className="px-5 py-3.5 font-extrabold text-unsaac-muted">Hora</th>
+                  <th className="px-5 py-3.5 font-extrabold text-unsaac-muted">Estado</th>
+                  <th className="px-5 py-3.5 font-extrabold text-unsaac-muted text-right">Método</th>
                 </tr>
               </thead>
-              <tbody>
-                {(!asistenciaHoy?.registros || asistenciaHoy.registros.length === 0) ? (
+              <tbody className="divide-y divide-unsaac-border">
+                {!asistenciaHoy?.registros || asistenciaHoy.registros.length === 0 ? (
                   <tr>
-                    <td colSpan={5} style={{ textAlign: "center", padding: "2rem", color: "rgba(255,255,255,0.4)" }}>
-                      No se registran marcaciones de ingreso el día de hoy.
+                    <td colSpan={4} className="p-8 text-center text-sm font-semibold text-unsaac-muted">
+                      No hay marcaciones registradas para el día de hoy.
                     </td>
                   </tr>
                 ) : (
-                  asistenciaHoy.registros.map((r, idx) => (
-                    <tr key={idx}>
-                      <td className={styles.docenteName}>{`${r.nombres} ${r.apellidos}`}</td>
-                      <td>{formatTime(r.hora_registro)}</td>
-                      <td>
-                        <span
-                          className={`${styles.statusBadge} ${
-                            r.estado === "PUNTUAL"
-                              ? styles.statusPresente
-                              : r.estado === "TARDANZA"
-                              ? styles.statusTardanza
-                              : styles.statusAusente
-                          }`}
-                        >
-                          {r.estado === "PUNTUAL" ? "Presente" : r.estado}
-                        </span>
+                  asistenciaHoy.registros.slice(0, 6).map((r, index) => (
+                    <tr key={index} className="transition-colors hover:bg-slate-50/50 group">
+                      <td className="px-5 py-3.5">
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-[10px] font-extrabold text-slate-600">
+                            {r.nombres.charAt(0)}{r.apellidos.charAt(0)}
+                          </div>
+                          <div>
+                            <p className="font-extrabold text-unsaac-text leading-tight group-hover:text-unsaac-blue transition-colors">
+                              {r.nombres} {r.apellidos}
+                            </p>
+                            <p className="text-[10px] font-bold text-unsaac-muted mt-0.5">
+                              {r.departamento}
+                            </p>
+                          </div>
+                        </div>
                       </td>
-                      <td>{r.departamento}</td>
-                      <td>Biométrico</td>
+                      <td className="px-5 py-3.5 font-semibold text-unsaac-muted">
+                        {formatTime(r.hora_registro)}
+                      </td>
+                      <td className="px-5 py-3.5">
+                        <Badge
+                          variant={
+                            r.estado === "PUNTUAL" || r.estado === "PRESENTE"
+                              ? "success"
+                              : r.estado === "TARDANZA"
+                              ? "warning"
+                              : r.estado === "AUSENTE"
+                              ? "danger"
+                              : "neutral"
+                          }
+                        >
+                          {r.estado}
+                        </Badge>
+                      </td>
+                      <td className="px-5 py-3.5 font-semibold text-unsaac-muted text-right">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <DashboardIcon name="fingerprint" className="h-4 w-4 text-unsaac-blue" />
+                          Biométrico
+                        </div>
+                      </td>
                     </tr>
                   ))
                 )}
               </tbody>
             </table>
           </div>
-        </div>
+        </Card>
 
-        {/* Biometric Status Section */}
-        <div className={styles.dashboardSection} style={{ flex: 1 }}>
-          <div className={styles.sectionHeader}>
-            <span className={styles.sectionTitle}>
-              <i className="fas fa-fingerprint" style={{ color: "#22c55e" }}></i>
-              Dispositivos biométricos
-            </span>
-          </div>
-          <div className={styles.deviceList}>
-            <div className={styles.deviceCard}>
-              <div className={styles.deviceInfo}>
-                <span className={styles.deviceName}>Biométrico Entrada Principal</span>
-                <span className={styles.deviceSync}>Estado: Activo</span>
-              </div>
-              <span className={`${styles.deviceStatus} ${styles.deviceOnline}`}>
-                <span className={styles.statusDot}></span> En línea
-              </span>
-            </div>
-
-            <div className={styles.deviceCard}>
-              <div className={styles.deviceInfo}>
-                <span className={styles.deviceName}>Biométrico Pabellón Sistemas</span>
-                <span className={styles.deviceSync}>Estado: Activo</span>
-              </div>
-              <span className={`${styles.deviceStatus} ${styles.deviceOnline}`}>
-                <span className={styles.statusDot}></span> Estable
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
+      </section>
     </div>
   );
+}
+
+function MiniTrend({ values, colorHex }: { values: number[]; colorHex: string }) {
+  const max = Math.max(...values, 5);
+  const min = Math.min(...values, 0);
+  const range = Math.max(max - min, 1);
+
+  const points = values
+    .map((value, index) => {
+      const x = index * (280 / (values.length - 1));
+      const y = 30 - ((value - min) / range) * 22;
+      return `${x},${y}`;
+    })
+    .join(" ");
+
+  return (
+    <svg className="h-10 w-full" viewBox="0 0 280 32" fill="none" preserveAspectRatio="none">
+      <polyline
+        points={points}
+        fill="none"
+        stroke={colorHex}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function DashboardIcon({ name, className }: { name: string; className?: string }) {
+  if (name === "fingerprint") {
+    return (
+      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M2 12C2 17.5 6.5 22 12 22s10-4.5 10-10S17.5 2 12 2a10 10 0 0 0-7.3 3.1" />
+        <path d="M5.5 8a8.5 8.5 0 0 1 13 0" />
+        <path d="M8 12a4.5 4.5 0 0 1 8 0" />
+        <path d="M10.5 15a1.5 1.5 0 0 1 3 0" />
+      </svg>
+    );
+  }
+  if (name === "users") {
+    return (
+      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+        <circle cx="9" cy="7" r="4" />
+        <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+      </svg>
+    );
+  }
+  if (name === "alert-triangle") {
+    return (
+      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+        <line x1="12" y1="9" x2="12" y2="13" />
+        <line x1="12" y1="17" x2="12.01" y2="17" />
+      </svg>
+    );
+  }
+  if (name === "activity") {
+    return (
+      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+      </svg>
+    );
+  }
+  return null;
 }
