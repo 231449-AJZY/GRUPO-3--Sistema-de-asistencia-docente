@@ -2,6 +2,7 @@
 
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import type { UsuarioActivo } from "@/types/usuario";
 import UserDropdown from "./UserDropdown";
 
@@ -22,16 +23,13 @@ export default function Header({ user }: HeaderProps) {
   return (
     <header className="fixed left-0 top-0 z-40 flex h-[108px] w-full items-center bg-gradient-to-r from-unsaac-primary to-unsaac-top px-7 text-white">
       <div className="flex items-center gap-4">
-        <div className="flex h-[62px] w-[62px] items-center justify-center rounded-2xl border border-white/15 bg-white/10">
-          <span className="text-xl font-extrabold">U</span>
-        </div>
-
-        <div>
-          <h2 className="text-[28px] font-extrabold leading-7">UNSAAC</h2>
-          <p className="text-sm font-bold tracking-[0.2em] text-blue-100">
-            CUSCO
-          </p>
-        </div>
+        <Image
+          src="/logo-unsaac.png"
+          alt="UNSAAC - Universidad Nacional de San Antonio Abad del Cusco"
+          width={191}
+          height={68}
+          priority
+        />
       </div>
 
       <div className="ml-10 h-14 w-[3px] rounded-full bg-unsaac-orange" />

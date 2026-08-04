@@ -57,7 +57,7 @@ const menuByRole: Record<UserRole, MenuItem[]> = {
       label: "Horarios",
       description: "Gestión académica y horarios",
       key: "horarios",
-      href: "/Admin/configuracion", // or horarios route
+      href: "/Admin/horarios",
       iconName: "calendar",
     },
     {

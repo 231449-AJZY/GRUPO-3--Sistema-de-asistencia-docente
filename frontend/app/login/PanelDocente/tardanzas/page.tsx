@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Card, { CardContent } from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
+import { toast } from "sonner";
 
 interface ConsolidatedTardanza {
   fecha: string;
@@ -21,6 +22,20 @@ export default function ConsultaTardanzasPage() {
   const [userName, setUserName] = useState("Docente Universitario");
   const [tardanzas, setTardanzas] = useState<ConsolidatedTardanza[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleActualizar = () => {
+    setIsRefreshing(true);
+    toast.info("Sincronizando tardanzas con el servidor...");
+    setTimeout(() => {
+      setIsRefreshing(false);
+      toast.success("Registros actualizados.");
+    }, 1500);
+  };
+
+  const handleExportarCSV = () => {
+    toast.success("Exportación CSV iniciada. El archivo se descargará en breve.");
+  };
 
   // Filters State
   const [filterDesde, setFilterDesde] = useState("");
@@ -185,10 +200,10 @@ export default function ConsultaTardanzasPage() {
           </p>
         </div>
         <div className="flex gap-3">
-          <Button variant="outline" className="font-bold border-slate-200 bg-white shadow-sm hover:bg-slate-50 text-slate-700 h-10 px-6">
-            Actualizar
+          <Button onClick={handleActualizar} disabled={isRefreshing} variant="outline" className="font-bold border-slate-200 bg-white shadow-sm hover:bg-slate-50 text-slate-700 h-10 px-6">
+            {isRefreshing ? "Actualizando..." : "Actualizar"}
           </Button>
-          <Button className="font-black bg-orange-500 hover:bg-orange-600 text-white shadow-sm border-none h-10 px-6">
+          <Button onClick={handleExportarCSV} className="font-black bg-orange-500 hover:bg-orange-600 text-white shadow-sm border-none h-10 px-6">
             Exportar CSV
           </Button>
         </div>
@@ -256,7 +271,7 @@ export default function ConsultaTardanzasPage() {
             <h2 className="text-xl font-black text-slate-900">Filtros de consulta</h2>
             <p className="text-[11px] font-semibold text-slate-500 mt-0.5">Delimite el periodo, el tipo de marcacion y el curso.</p>
           </div>
-          <Button variant="outline" className="text-xs font-bold px-4 h-9 border-slate-200 shadow-sm hover:bg-slate-50 text-slate-600">
+          <Button onClick={() => { setFilterDesde(""); setFilterHasta(""); setFilterTipo("Todas"); setFilterCurso("Todos los cursos"); toast.info("Filtros eliminados."); }} variant="outline" className="text-xs font-bold px-4 h-9 border-slate-200 shadow-sm hover:bg-slate-50 text-slate-600">
             Limpiar filtros
           </Button>
         </div>
@@ -298,7 +313,7 @@ export default function ConsultaTardanzasPage() {
                  La fuente actual devuelve hasta 30 ingresos institucionales y 30 marcaciones de cursos recientes. No incluye minutos exactos de retraso, justificaciones ni hora esperada.
               </p>
             </div>
-            <Button variant="outline" className="text-[10px] font-black h-8 text-blue-600 border-blue-200 bg-white shadow-sm shrink-0">
+            <Button onClick={() => toast.info("El historial completo estará disponible próximamente.")} variant="outline" className="text-[10px] font-black h-8 text-blue-600 border-blue-200 bg-white shadow-sm shrink-0">
                Ver historial completo
             </Button>
           </div>

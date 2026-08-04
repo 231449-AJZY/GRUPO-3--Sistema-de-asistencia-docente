@@ -17,16 +17,24 @@ export default function DocenteLayout({ children }: { children: React.ReactNode 
     }
   }, []);
 
-  // Determine active route for sidebar
+  // Determine active route for sidebar (keys must match menuByRole.DOCENTE in Sidebar.tsx)
   let activeTab = "dashboard";
-  if (pathname?.includes("/horarios")) {
-    activeTab = "mis_horarios";
-  } else if (pathname?.includes("/calendario")) {
-    activeTab = "calendario";
+  if (pathname?.includes("/asistencia/ingreso")) {
+    activeTab = "ingreso";
+  } else if (pathname?.includes("/asistencia/historial")) {
+    activeTab = "historial";
+  } else if (pathname?.includes("/asistencia")) {
+    activeTab = "asistencia";
   } else if (pathname?.includes("/tardanzas")) {
     activeTab = "tardanzas";
-  } else if (pathname?.includes("/asistencia")) {
-    activeTab = "mi_asistencia";
+  } else if (pathname?.includes("/inasistencias")) {
+    activeTab = "inasistencias";
+  } else if (pathname?.includes("/calendario")) {
+    activeTab = "calendario";
+  } else if (pathname?.includes("/horarios")) {
+    activeTab = "horarios";
+  } else if (pathname?.includes("/perfil")) {
+    activeTab = "perfil";
   }
 
   const displayUser = user || {

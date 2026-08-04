@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import Card, { CardContent } from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import { toast } from "sonner";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import { MOCK_ADMIN } from "@/lib/constants";
 
 interface Usuario {
   id: number;
@@ -136,8 +138,9 @@ export default function GestionUsuariosPage() {
   }
 
   return (
-    <div className="p-6 md:p-8 space-y-6 bg-slate-50 min-h-screen">
-      
+    <DashboardLayout user={MOCK_ADMIN} active="usuarios">
+    <div className="space-y-6">
+
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 pb-2">
         <div>
@@ -410,5 +413,6 @@ export default function GestionUsuariosPage() {
         </div>
       )}
     </div>
+    </DashboardLayout>
   );
 }

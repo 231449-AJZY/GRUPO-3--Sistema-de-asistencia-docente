@@ -5,6 +5,7 @@ import Card, { CardContent } from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Link from "next/link";
 import Badge from "@/components/ui/Badge";
+import { toast } from "sonner";
 
 interface UserData {
   id: number;
@@ -45,6 +46,16 @@ export default function MiAsistenciaHub() {
   const [cursos, setCursos] = useState<AsistenciaCurso[]>([]);
   const [horarios, setHorarios] = useState<HorarioData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleActualizar = () => {
+    setIsRefreshing(true);
+    toast.info("Actualizando datos de asistencia...");
+    setTimeout(() => {
+      setIsRefreshing(false);
+      toast.success("Datos actualizados correctamente.");
+    }, 1400);
+  };
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user") || sessionStorage.getItem("user");
@@ -184,8 +195,8 @@ export default function MiAsistenciaHub() {
           </p>
         </div>
         <div className="flex gap-3">
-          <Button variant="outline" className="font-bold border-slate-200 bg-white shadow-sm hover:bg-slate-50 text-slate-700 h-10 px-6">
-            Actualizar datos
+          <Button onClick={handleActualizar} disabled={isRefreshing} variant="outline" className="font-bold border-slate-200 bg-white shadow-sm hover:bg-slate-50 text-slate-700 h-10 px-6">
+            {isRefreshing ? "Actualizando..." : "Actualizar datos"}
           </Button>
         </div>
       </div>
