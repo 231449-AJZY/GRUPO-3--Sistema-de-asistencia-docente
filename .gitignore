@@ -39,3 +39,43 @@ Integrar-Frontend-L00S3RR-en-Gabo.ps1
 frontend/app/login/backup_*/
 frontend/app/login/*.backup*
 frontend/app/login/*.bak
+# ==========================
+# FLUTTER Y ANDROID
+# ==========================
+
+**/.dart_tool/
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+**/.packages
+**/.gradle/
+**/build/
+*.apk
+*.aab
+
+# ==========================
+# CREDENCIALES Y FIRMAS
+# ==========================
+
+*.jks
+*.keystore
+**/key.properties
+**/local.properties
+**/signing-secrets.*
+
+# ==========================
+# SALIDAS Y COBERTURA
+# ==========================
+
+**/dist/
+**/coverage/
+**/logs/
+*.log
+
+# ==========================
+# EDITORES Y SISTEMA
+# ==========================
+
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
