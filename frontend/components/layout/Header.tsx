@@ -1,6 +1,8 @@
 "use client";
 
 
+import { useState, useEffect } from "react";
+import Image from "next/image";
 import type { UsuarioActivo } from "@/types/usuario";
 import UserDropdown from "./UserDropdown";
 
@@ -9,19 +11,25 @@ interface HeaderProps {
 }
 
 export default function Header({ user }: HeaderProps) {
+  const [now, setNow] = useState<Date | null>(null);
+
+  useEffect(() => {
+    setNow(new Date());
+    const timer = setInterval(() => {
+      setNow(new Date());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
   return (
     <header className="fixed left-0 top-0 z-40 flex h-[108px] w-full items-center bg-gradient-to-r from-unsaac-primary to-unsaac-top px-7 text-white">
       <div className="flex items-center gap-4">
-        <div className="flex h-[62px] w-[62px] items-center justify-center rounded-2xl border border-white/15 bg-white/10">
-          <span className="text-xl font-extrabold">U</span>
-        </div>
-
-        <div>
-          <h2 className="text-[28px] font-extrabold leading-7">UNSAAC</h2>
-          <p className="text-sm font-bold tracking-[0.2em] text-blue-100">
-            CUSCO
-          </p>
-        </div>
+        <Image
+          src="/logo-unsaac.png"
+          alt="UNSAAC - Universidad Nacional de San Antonio Abad del Cusco"
+          width={191}
+          height={68}
+          priority
+        />
       </div>
 
       <div className="ml-10 h-14 w-[3px] rounded-full bg-unsaac-orange" />
@@ -42,12 +50,16 @@ export default function Header({ user }: HeaderProps) {
 
         <div className="hidden text-right lg:block">
           <p className="text-xs font-bold text-blue-100">FECHA</p>
-          <p className="text-sm font-bold">23/06/2026</p>
+          <p className="text-sm font-bold min-w-[85px]">
+            {now ? now.toLocaleDateString("es-ES", { day: "2-digit", month: "long", year: "numeric" }) : "---"}
+          </p>
         </div>
 
         <div className="hidden text-right lg:block">
           <p className="text-xs font-bold text-blue-100">HORA</p>
-          <p className="text-sm font-bold">12:18 p.m.</p>
+          <p className="text-sm font-bold min-w-[70px]">
+            {now ? now.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }) : "--:--:--"}
+          </p>
         </div>
 
         <UserDropdown user={user} />

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import type { UsuarioActivo } from "@/types/usuario";
 
 interface UserDropdownProps {
@@ -9,229 +9,232 @@ interface UserDropdownProps {
 
 export default function UserDropdown({ user }: UserDropdownProps) {
   const [open, setOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const initials = user.nombre
+  // Close dropdown on click outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const displayName = user?.nombre || ((user as any)?.nombres ? `${(user as any).nombres || ""} ${(user as any).apellidos || ""}`.trim() : "") || "Usuario";
+  
+  const initials = displayName
     .split(" ")
+    .filter(Boolean)
     .map((word) => word[0])
     .join("")
     .slice(0, 2)
-    .toUpperCase();
+    .toUpperCase() || "US";
 
-  const roleLabel =
-    user.rol === "ADMINISTRADOR"
+  const currentRole = (user?.rol || "ADMINISTRADOR").toUpperCase();
+
+  const roleDisplayLabel =
+    currentRole === "ADMINISTRADOR"
       ? "Administrador general"
-      : user.rol === "DOCENTE"
-      ? "Docente"
-      : "Supervisor";
+      : currentRole === "DOCENTE"
+      ? "Docente universitario"
+      : "Supervisor de control";
+
+  const displayCorreo = user?.correo || (user as any)?.email || "";
 
   return (
-    <div className="relative">
+    <div className="relative" ref={dropdownRef}>
+      {/* Trigger Button */}
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
-        className="flex h-16 min-w-[270px] items-center gap-3 rounded-2xl border border-white/15 bg-white/10 px-4 text-left transition hover:bg-white/15"
+        className="flex h-14 min-w-[250px] items-center gap-3.5 rounded-2xl border border-white/15 bg-white/10 px-3.5 text-left transition hover:bg-white/15 focus:outline-none"
       >
-        <div className="relative flex h-11 w-11 items-center justify-center rounded-full border border-white/30 bg-unsaac-sidebar text-sm font-extrabold text-white">
+        <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/30 bg-unsaac-sidebar text-xs font-black text-white shadow-sm">
           {initials}
-          <span className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-unsaac-top bg-unsaac-green" />
+          <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-unsaac-top bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.8)]" />
         </div>
 
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-extrabold text-white">
-            {user.nombre}
+          <p className="truncate text-sm font-black leading-tight text-white">
+            {displayName}
           </p>
-          <p className="truncate text-xs font-semibold text-blue-100">
-            {roleLabel}
+          <p className="truncate text-xs font-semibold text-blue-100/80 mt-0.5">
+            {roleDisplayLabel}
           </p>
         </div>
 
         <svg
-          className={`h-5 w-5 text-white transition ${
+          className={`h-4 w-4 text-white/80 transition-transform duration-200 ${
             open ? "rotate-180" : ""
           }`}
           viewBox="0 0 24 24"
           fill="none"
+          stroke="currentColor"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
         >
-          <path
-            d="M6 9l6 6 6-6"
-            stroke="currentColor"
-            strokeWidth="2.3"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
+          <path d="M6 9l6 6 6-6" />
         </svg>
       </button>
 
+      {/* Opened Dropdown Container */}
       {open && (
-        <div className="absolute right-0 top-[74px] z-50 w-[340px] rounded-2xl border border-unsaac-border bg-white shadow-2xl">
-          <div className="absolute right-10 -top-3 h-6 w-6 rotate-45 border-l border-t border-unsaac-border bg-white" />
+        <div className="absolute right-0 top-[68px] z-50 w-[280px] rounded-[24px] border border-[#e2e8f0] bg-white shadow-xl overflow-visible animate-in fade-in slide-in-from-top-2 duration-200">
+          
+          {/* Top Caret */}
+          <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 rotate-45 border-l border-t border-[#e2e8f0] bg-[#f8fafc] z-[-1]" />
 
-          <div className="rounded-t-2xl bg-unsaac-content px-5 py-5">
-            <div className="flex items-center gap-4">
-              <div className="relative flex h-14 w-14 items-center justify-center rounded-full bg-unsaac-sidebar text-base font-extrabold text-white">
+          <div className="flex flex-col p-2">
+            {/* Header User Summary */}
+            <div className="bg-[#f8fafc] rounded-[20px] p-4 flex items-center gap-3 mb-2">
+              <div className="relative flex h-[46px] w-[46px] shrink-0 items-center justify-center rounded-full bg-[#0f2e4a] text-sm font-bold text-white">
                 {initials}
-                <span className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full border-2 border-white bg-unsaac-green" />
+                <span className="absolute -bottom-1 -right-1 h-3.5 w-3.5 rounded-full border-[2.5px] border-[#f8fafc] bg-[#16a34a]" />
               </div>
 
-              <div>
-                <p className="text-[15px] font-extrabold text-unsaac-text">
-                  {user.nombre}
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-[15px] font-bold text-[#1e293b] leading-tight">
+                  {displayName}
                 </p>
-                <p className="text-xs font-semibold text-unsaac-muted">
-                  {roleLabel}
+                <p className="truncate text-xs font-semibold text-[#64748b] mt-0.5">
+                  {roleDisplayLabel}
                 </p>
-                <p className="text-xs font-semibold text-unsaac-muted">
-                  {user.correo}
+                <p className="truncate text-xs font-semibold text-[#64748b] mt-0.5">
+                  {displayCorreo}
                 </p>
               </div>
             </div>
-          </div>
 
-          <div className="p-3">
-            <DropdownItem icon="user" label="Mi perfil" active />
-            <DropdownItem icon="settings" label="Configuración de cuenta" />
-            <DropdownItem icon="lock" label="Cambiar contraseña" />
-            <DropdownItem icon="sliders" label="Preferencias" />
-            <DropdownItem icon="help" label="Ayuda / Soporte" />
+            {/* Menu Links */}
+            <div className="flex flex-col gap-1 px-1">
+              <button className="group flex h-10 w-full items-center gap-3 rounded-xl bg-[#f1f5f9] px-3 text-sm font-bold text-[#0f2e4a] transition hover:bg-[#e2e8f0]">
+                <DropdownIcon name="user" className="h-5 w-5 text-[#3b82f6]" />
+                Mi perfil
+              </button>
+              
+              <button className="group flex h-10 w-full items-center gap-3 rounded-xl px-3 text-sm font-bold text-[#1e293b] transition hover:bg-[#f1f5f9]">
+                <DropdownIcon name="sun" className="h-5 w-5 text-[#475569]" />
+                Configuración de cuenta
+              </button>
 
-            <div className="my-2 border-t border-unsaac-border" />
+              <button className="group flex h-10 w-full items-center gap-3 rounded-xl px-3 text-sm font-bold text-[#1e293b] transition hover:bg-[#f1f5f9]">
+                <DropdownIcon name="lock" className="h-5 w-5 text-[#475569]" />
+                Cambiar contraseña
+              </button>
 
-            <button className="flex h-11 w-full items-center gap-3 rounded-xl bg-red-50 px-4 text-sm font-extrabold text-unsaac-red transition hover:bg-red-100">
-              <Icon name="logout" className="h-5 w-5" />
+              <button className="group flex h-10 w-full items-center gap-3 rounded-xl px-3 text-sm font-bold text-[#1e293b] transition hover:bg-[#f1f5f9]">
+                <DropdownIcon name="sliders" className="h-5 w-5 text-[#475569]" />
+                Preferencias
+              </button>
+
+              <button className="group flex h-10 w-full items-center gap-3 rounded-xl px-3 text-sm font-bold text-[#1e293b] transition hover:bg-[#f1f5f9]">
+                <DropdownIcon name="help-circle" className="h-5 w-5 text-[#475569]" />
+                Ayuda / Soporte
+              </button>
+            </div>
+
+            <div className="my-2 border-t border-[#e2e8f0] mx-1" />
+
+            {/* Logout Action */}
+            <button
+              type="button"
+              onClick={() => {
+                localStorage.removeItem("unsaac_token");
+                sessionStorage.removeItem("unsaac_token");
+                localStorage.removeItem("user");
+                sessionStorage.removeItem("user");
+                window.location.href = "/login";
+              }}
+              className="flex h-11 w-full items-center gap-3 rounded-[14px] bg-[#fef2f2] px-4 text-[13px] font-bold text-[#dc2626] transition hover:bg-[#fee2e2] mx-1"
+              style={{ width: "calc(100% - 8px)" }}
+            >
+              <DropdownIcon name="logout" className="h-[18px] w-[18px] text-[#dc2626]" />
               Cerrar sesión
             </button>
           </div>
+
         </div>
       )}
     </div>
   );
 }
 
-function DropdownItem({
-  icon,
-  label,
-  active = false,
-}: {
-  icon: IconName;
-  label: string;
-  active?: boolean;
-}) {
-  return (
-    <button
-      className={`flex h-11 w-full items-center gap-3 rounded-xl px-4 text-sm font-bold transition ${
-        active
-          ? "bg-unsaac-content-soft text-unsaac-text"
-          : "text-unsaac-text hover:bg-unsaac-content-soft"
-      }`}
-    >
-      <Icon
-        name={icon}
-        className={`h-5 w-5 ${active ? "text-unsaac-blue" : "text-unsaac-muted"}`}
-      />
-      {label}
-    </button>
-  );
-}
-
-type IconName = "user" | "settings" | "lock" | "sliders" | "help" | "logout";
-
-function Icon({
-  name,
-  className,
-}: {
-  name: IconName;
-  className?: string;
-}) {
+function DropdownIcon({ name, className }: { name: string; className?: string }) {
   if (name === "user") {
     return (
-      <svg className={className} viewBox="0 0 24 24" fill="none">
-        <circle cx="12" cy="8" r="4" stroke="currentColor" strokeWidth="2" />
-        <path
-          d="M4 21v-1a8 8 0 0 1 16 0v1"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-        />
+      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+        <circle cx="12" cy="7" r="4" />
       </svg>
     );
   }
 
-  if (name === "settings") {
+  if (name === "sun") {
     return (
-      <svg className={className} viewBox="0 0 24 24" fill="none">
-        <circle cx="12" cy="12" r="3.5" stroke="currentColor" strokeWidth="2" />
-        <path
-          d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-        />
+      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="4" />
+        <path d="M12 2v2" />
+        <path d="M12 20v2" />
+        <path d="m4.93 4.93 1.41 1.41" />
+        <path d="m17.66 17.66 1.41 1.41" />
+        <path d="M2 12h2" />
+        <path d="M20 12h2" />
+        <path d="m6.34 17.66-1.41 1.41" />
+        <path d="m19.07 4.93-1.41 1.41" />
       </svg>
     );
   }
 
   if (name === "lock") {
     return (
-      <svg className={className} viewBox="0 0 24 24" fill="none">
-        <rect
-          x="5"
-          y="10"
-          width="14"
-          height="10"
-          rx="2"
-          stroke="currentColor"
-          strokeWidth="2"
-        />
-        <path
-          d="M8 10V7a4 4 0 0 1 8 0v3"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-        />
+      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+        <path d="M7 11V7a5 5 0 0 1 10 0v4" />
       </svg>
     );
   }
 
   if (name === "sliders") {
     return (
-      <svg className={className} viewBox="0 0 24 24" fill="none">
-        <path d="M4 7h16M4 17h16" stroke="currentColor" strokeWidth="2" />
-        <circle cx="9" cy="7" r="3" stroke="currentColor" strokeWidth="2" />
-        <circle cx="15" cy="17" r="3" stroke="currentColor" strokeWidth="2" />
+      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <line x1="4" y1="21" x2="4" y2="14" />
+        <line x1="4" y1="10" x2="4" y2="3" />
+        <line x1="12" y1="21" x2="12" y2="12" />
+        <line x1="12" y1="8" x2="12" y2="3" />
+        <line x1="20" y1="21" x2="20" y2="16" />
+        <line x1="20" y1="12" x2="20" y2="3" />
+        <line x1="1" y1="14" x2="7" y2="14" />
+        <line x1="9" y1="8" x2="15" y2="8" />
+        <line x1="17" y1="16" x2="23" y2="16" />
       </svg>
     );
   }
 
-  if (name === "help") {
+  if (name === "help-circle") {
     return (
-      <svg className={className} viewBox="0 0 24 24" fill="none">
-        <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
-        <path
-          d="M9.5 9a3 3 0 1 1 4.8 2.4c-1.2.8-2.3 1.6-2.3 3.1"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-        />
-        <circle cx="12" cy="18" r="1" fill="currentColor" />
+      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10" />
+        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+        <line x1="12" y1="17" x2="12.01" y2="17" />
       </svg>
     );
   }
 
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none">
-      <path
-        d="M10 5H7a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h3"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-      />
-      <path
-        d="M17 16l4-4-4-4M21 12H10"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
+  if (name === "logout") {
+    return (
+      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+        <polyline points="16 17 21 12 16 7" />
+        <line x1="21" y1="12" x2="9" y2="12" />
+      </svg>
+    );
+  }
+
+  return null;
 }

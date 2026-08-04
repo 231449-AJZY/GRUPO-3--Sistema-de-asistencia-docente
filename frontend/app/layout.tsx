@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import type { ReactNode } from "react";
+import { Toaster } from "sonner";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -10,14 +10,14 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-L00S3RR/feat/backend
   title: "Sistema de Control de Asistencia Biométrica - UNSAAC",
   description: "Sistema web para el control de asistencia docente mediante tecnología biométrica en la UNSAAC.",
+};
 
 export default function RootLayout({
   children,
 }: {
-  children: ReactNode;
+  children: React.ReactNode;
 }) {
   return (
     <html lang="es">
@@ -29,6 +29,7 @@ export default function RootLayout({
       </head>
       <body className={inter.className}>
         {children}
+        <Toaster position="top-right" richColors expand={true} />
       </body>
     </html>
   );
