@@ -1,0 +1,413 @@
+/* app/login/PanelSupervisor/page.module.css */
+
+.dashboardContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding-bottom: 2rem;
+  font-family: 'Inter', sans-serif;
+}
+
+/* Title Section */
+.titleSection h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #0b2b42;
+  margin: 0 0 0.25rem 0;
+}
+
+.titleSection p {
+  font-size: 0.9rem;
+  color: #64748b;
+  margin: 0;
+}
+
+/* Metric Grid */
+.metricGrid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 1rem;
+}
+
+.metricCard {
+  background-color: #fff;
+  border-radius: 12px;
+  padding: 1.25rem;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.02), 0 1px 2px rgba(0, 0, 0, 0.03);
+  border: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.metricCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.75rem;
+}
+
+.cardTitle {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.cardIcon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1rem;
+}
+
+/* Icon Variants */
+.iconBlue {
+  background-color: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+}
+
+.iconGreen {
+  background-color: rgba(34, 197, 94, 0.1);
+  color: #22c55e;
+}
+
+.iconRed {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+.iconOrange {
+  background-color: rgba(245, 128, 37, 0.1);
+  color: #f58025;
+}
+
+.iconRedShield {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #b91c1c;
+}
+
+.cardBody {
+  display: flex;
+  flex-direction: column;
+}
+
+.cardValue {
+  font-size: 1.85rem;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.2;
+}
+
+.cardSub {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin-top: 0.35rem;
+}
+
+.trendUp {
+  color: #22c55e;
+  font-weight: 600;
+}
+
+.trendDown {
+  color: #ef4444;
+  font-weight: 600;
+}
+
+/* Sparklines inside metric cards */
+.sparklineWrapper {
+  margin-top: 0.75rem;
+  height: 30px;
+  width: 100%;
+}
+
+/* Layout Rows */
+.middleRow, .bottomRow {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1.25rem;
+}
+
+.dashboardSection {
+  background-color: #fff;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  padding: 1.5rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+  display: flex;
+  flex-direction: column;
+}
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+}
+
+.sectionTitle {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #0f172a;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sectionAction {
+  background: none;
+  border: none;
+  color: #f58025;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.sectionAction:hover {
+  text-decoration: underline;
+}
+
+.dropdownSelect {
+  padding: 0.35rem 1.5rem 0.35rem 0.75rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background-color: #fff;
+  color: #334155;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+/* Chart Styles */
+.chartContainer {
+  height: 250px;
+  width: 100%;
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  padding-bottom: 20px;
+}
+
+/* Alerts Box */
+.alertList {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.alertItem {
+  display: flex;
+  gap: 12px;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.alertItem:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.alertIcon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 0.95rem;
+  flex-shrink: 0;
+}
+
+.alertContent {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.alertMeta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.alertTitle {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.alertTime {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.alertText {
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+/* Table styling for bottom left */
+.tableContainer {
+  overflow-x: auto;
+}
+
+.activityTable {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.activityTable th {
+  padding: 0.75rem 1rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #64748b;
+  border-bottom: 1.5px solid #e2e8f0;
+  background-color: #f8fafc;
+}
+
+.activityTable td {
+  padding: 0.85rem 1rem;
+  font-size: 0.85rem;
+  color: #334155;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.activityTable tr:hover {
+  background-color: #f8fafc;
+}
+
+.docenteName {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.65rem;
+  border-radius: 12px;
+}
+
+.statusPresente {
+  background-color: rgba(34, 197, 94, 0.1);
+  color: #16a34a;
+}
+
+.statusTardanza {
+  background-color: rgba(245, 128, 37, 0.1);
+  color: #ea580c;
+}
+
+.statusAusente {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
+}
+
+/* Device List on Bottom Right */
+.deviceList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.deviceCard {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: background-color 0.2s;
+}
+
+.deviceCardAlert {
+  background-color: rgba(245, 128, 37, 0.03);
+  border-color: rgba(245, 128, 37, 0.25);
+}
+
+.deviceInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.deviceName {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.deviceSync {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.deviceStatus {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+}
+
+.statusDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.deviceOnline {
+  background-color: rgba(34, 197, 94, 0.1);
+  color: #16a34a;
+}
+
+.deviceOnline .statusDot {
+  background-color: #22c55e;
+}
+
+.deviceWarning {
+  background-color: rgba(245, 128, 37, 0.1);
+  color: #d97706;
+}
+
+.deviceWarning .statusDot {
+  background-color: #f59e0b;
+}
+
+@media (max-width: 1200px) {
+  .metricGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .metricGrid {
+    grid-template-columns: 1fr;
+  }
+  .middleRow, .bottomRow {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,6 +1,12 @@
 import type { AdminDashboardData } from "@/types/dashboard";
 
 export const mockAdminDashboard: AdminDashboardData = {
+  summary: {
+    docentesActivos: 149,
+    asistenciasHoy: 158,
+    tardanzasHoy: 11,
+    inasistenciasHoy: 16,
+  },
   metrics: [
     {
       title: "Docentes registrados",
@@ -91,6 +97,7 @@ export const mockAdminDashboard: AdminDashboardData = {
       estado: "Presente",
       aula: "A-101",
       metodo: "Biométrico",
+      resultado: "REGISTRADA",
     },
     {
       id: 2,
@@ -99,6 +106,7 @@ export const mockAdminDashboard: AdminDashboardData = {
       estado: "Presente",
       aula: "B-205",
       metodo: "Biométrico",
+      resultado: "REGISTRADA",
     },
     {
       id: 3,
@@ -107,6 +115,7 @@ export const mockAdminDashboard: AdminDashboardData = {
       estado: "Tardanza",
       aula: "C-303",
       metodo: "Biométrico",
+      resultado: "REGISTRADA",
     },
     {
       id: 4,
@@ -115,6 +124,7 @@ export const mockAdminDashboard: AdminDashboardData = {
       estado: "Presente",
       aula: "A-102",
       metodo: "Biométrico",
+      resultado: "REGISTRADA",
     },
     {
       id: 5,
@@ -123,8 +133,20 @@ export const mockAdminDashboard: AdminDashboardData = {
       estado: "Presente",
       aula: "D-404",
       metodo: "Biométrico",
+      resultado: "REGISTRADA",
     },
   ],
+
+  verificationSummary: {
+    totalAttempts: 5,
+    registered: 5,
+    duplicate: 0,
+    rejected: 0,
+    dynamicQr: 0,
+    mobileBiometric: 5,
+    offline: 0,
+    other: 0,
+  },
 
   biometricStatus: {
     connectedDevices: "12/12",

@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import Button from "@/components/ui/Button";
@@ -12,6 +13,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("123456");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [rememberSession, setRememberSession] = useState(true);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -22,10 +24,15 @@ export default function LoginPage() {
     try {
       const response = await mockLogin({ correo, password });
 
-      saveSession(response.user, response.token);
+      saveSession(
+        response.user,
+        response.token,
+        rememberSession,
+        response.sessionUser
+      );
 
       const redirectTo = getDashboardPathByRole(response.user.rol);
-      router.push(redirectTo);
+      router.replace(redirectTo);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "No se pudo iniciar sesión"
@@ -58,19 +65,15 @@ export default function LoginPage() {
 
       {/* Header superior */}
       <header className="relative z-10 flex h-[130px] items-center px-12">
-        <div className="flex items-center gap-5">
-          <div className="flex h-[76px] w-[76px] items-center justify-center rounded-full border border-white/30">
-            <UniversityIcon className="h-11 w-11 text-white" />
-          </div>
-
-          <div>
-            <h1 className="text-[38px] font-extrabold leading-none tracking-wide">
-              UNSAAC
-            </h1>
-            <p className="mt-2 text-sm font-bold tracking-[0.32em] text-blue-100">
-              CUSCO
-            </p>
-          </div>
+        <div className="flex items-center">
+          <Image
+            src="/images/logo-unsaac.png"
+            alt="Universidad Nacional de San Antonio Abad del Cusco"
+            width={280}
+            height={95}
+            priority
+            className="h-[90px] w-auto max-w-[280px] object-contain"
+          />
         </div>
 
         <div className="ml-10 h-14 w-[3px] rounded-full bg-unsaac-orange" />
@@ -185,7 +188,10 @@ export default function LoginPage() {
                   <input
                     type="checkbox"
                     className="h-4 w-4 rounded border-unsaac-border"
-                    defaultChecked
+                    checked={rememberSession}
+                    onChange={(event) =>
+                      setRememberSession(event.target.checked)
+                    }
                   />
                   Recordar sesión
                 </label>
@@ -286,38 +292,6 @@ function FeatureItem({
   );
 }
 
-function UniversityIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none">
-      <path
-        d="M3 21h18"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-      />
-      <path
-        d="M5 21V8l7-4 7 4v13"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M9 21v-7h6v7"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M8 10h.01M12 10h.01M16 10h.01"
-        stroke="currentColor"
-        strokeWidth="2.4"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
 
 function LockIcon({ className }: { className?: string }) {
   return (

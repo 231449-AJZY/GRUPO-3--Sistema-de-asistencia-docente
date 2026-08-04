@@ -1,0 +1,173 @@
+import type {
+  CaptureReader,
+  CaptureTeacher,
+  FingerOption,
+  FingerprintCapture,
+} from "@/types/biometricCapture";
+
+export const captureTeachers: CaptureTeacher[] = [
+  {
+    id: 1,
+    codigo: "DOC-001",
+    dni: "45871236",
+    nombres: "Alberto",
+    apellidos: "Acosta Sullca",
+    correo: "aacosta@unsaac.edu.pe",
+    facultad: "Ingeniería",
+    departamento:
+      "Ingeniería de Sistemas",
+    categoria: "Principal",
+    estadoBiometrico: "En proceso",
+    huellasRegistradas: 3,
+    totalHuellas: 10,
+  },
+  {
+    id: 2,
+    codigo: "DOC-002",
+    dni: "71456328",
+    nombres: "Verónica",
+    apellidos: "Holgado Canales",
+    correo: "vholgado@unsaac.edu.pe",
+    facultad: "Educación",
+    departamento:
+      "Educación y Ciencias Sociales",
+    categoria: "Asociado",
+    estadoBiometrico: "Pendiente",
+    huellasRegistradas: 0,
+    totalHuellas: 10,
+  },
+  {
+    id: 3,
+    codigo: "DOC-003",
+    dni: "60321478",
+    nombres: "Miguel Ángel",
+    apellidos: "Valdivia Cárdenas",
+    correo: "mvaldivia@unsaac.edu.pe",
+    facultad: "Arquitectura",
+    departamento:
+      "Arquitectura y Urbanismo",
+    categoria: "Auxiliar",
+    estadoBiometrico: "Registrado",
+    huellasRegistradas: 10,
+    totalHuellas: 10,
+  },
+  {
+    id: 4,
+    codigo: "DOC-004",
+    dni: "42136587",
+    nombres: "Nelly Patricia",
+    apellidos: "Jiménez Chino",
+    correo: "njimenez@unsaac.edu.pe",
+    facultad: "Ciencias de la Salud",
+    departamento: "Medicina Humana",
+    categoria: "Contratado",
+    estadoBiometrico: "En proceso",
+    huellasRegistradas: 5,
+    totalHuellas: 10,
+  },
+];
+
+export const fingerOptions: FingerOption[] = [
+  {
+    code: "PULGAR_DERECHO",
+    label: "Pulgar derecho",
+    shortLabel: "Pulgar D.",
+    hand: "Derecha",
+  },
+  {
+    code: "INDICE_DERECHO",
+    label: "Índice derecho",
+    shortLabel: "Índice D.",
+    hand: "Derecha",
+  },
+  {
+    code: "MEDIO_DERECHO",
+    label: "Medio derecho",
+    shortLabel: "Medio D.",
+    hand: "Derecha",
+  },
+  {
+    code: "ANULAR_DERECHO",
+    label: "Anular derecho",
+    shortLabel: "Anular D.",
+    hand: "Derecha",
+  },
+  {
+    code: "MENIQUE_DERECHO",
+    label: "Meñique derecho",
+    shortLabel: "Meñique D.",
+    hand: "Derecha",
+  },
+  {
+    code: "PULGAR_IZQUIERDO",
+    label: "Pulgar izquierdo",
+    shortLabel: "Pulgar I.",
+    hand: "Izquierda",
+  },
+  {
+    code: "INDICE_IZQUIERDO",
+    label: "Índice izquierdo",
+    shortLabel: "Índice I.",
+    hand: "Izquierda",
+  },
+  {
+    code: "MEDIO_IZQUIERDO",
+    label: "Medio izquierdo",
+    shortLabel: "Medio I.",
+    hand: "Izquierda",
+  },
+  {
+    code: "ANULAR_IZQUIERDO",
+    label: "Anular izquierdo",
+    shortLabel: "Anular I.",
+    hand: "Izquierda",
+  },
+  {
+    code: "MENIQUE_IZQUIERDO",
+    label: "Meñique izquierdo",
+    shortLabel: "Meñique I.",
+    hand: "Izquierda",
+  },
+];
+
+export const captureReader: CaptureReader = {
+  id: 1,
+  codigo: "BIO-001",
+  nombre: "Lector biométrico principal",
+  modelo: "ZKTeco SLK20R",
+  ubicacion: "Pabellón de Ingeniería",
+  conectado: true,
+  calidadConexion: 96,
+  ultimaActividad: "Hace 2 minutos",
+};
+
+export const initialFingerprintCaptures: FingerprintCapture[] = [
+  {
+    id: 1,
+    docenteId: 1,
+    docente: "Alberto Acosta Sullca",
+    codigoDocente: "DOC-001",
+    finger: "PULGAR_DERECHO",
+    fingerLabel: "Pulgar derecho",
+    quality: 94,
+    qualityLabel: "Excelente",
+    fecha: "15/07/2026",
+    hora: "12:42:08",
+    dispositivo: "BIO-001",
+    resultado: "Registrado",
+  },
+  {
+    id: 2,
+    docenteId: 4,
+    docente: "Nelly Patricia Jiménez Chino",
+    codigoDocente: "DOC-004",
+    finger: "INDICE_DERECHO",
+    fingerLabel: "Índice derecho",
+    quality: 87,
+    qualityLabel: "Buena",
+    fecha: "15/07/2026",
+    hora: "11:56:44",
+    dispositivo: "BIO-001",
+    resultado: "Registrado",
+  },
+];

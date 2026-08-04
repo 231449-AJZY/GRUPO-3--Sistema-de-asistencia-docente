@@ -1,16 +1,38 @@
+"use client";
+
+import {
+  useCallback,
+  useEffect,
+  useState,
+} from "react";
+
+import { useRouter } from "next/navigation";
+
 import DashboardLayout from "@/components/layout/DashboardLayout";
+import ErrorState from "@/components/shared/ErrorState";
+import LoadingState from "@/components/shared/LoadingState";
+import PageHeader from "@/components/shared/PageHeader";
+import SectionCard from "@/components/shared/SectionCard";
+import StatusBadge from "@/components/shared/StatusBadge";
 import Button from "@/components/ui/Button";
 import Badge from "@/components/ui/Badge";
-import Card, { CardContent, CardHeader } from "@/components/ui/Card";
-import { getAdminDashboardData } from "@/lib/api";
+import Card, { CardContent } from "@/components/ui/Card";
+import {
+  ApiDashboardError,
+  getAdminDashboardData,
+} from "@/lib/api";
+import { clearSession, getSession } from "@/lib/auth";
 import { MOCK_ADMIN } from "@/lib/constants";
 import type {
+  AdminDashboardData,
   BiometricStatus,
   DashboardMetric,
   HourlyActivity,
   RecentAlert,
   RecentAttendance,
+  VerificationSummary,
 } from "@/types/dashboard";
+import type { UsuarioActivo } from "@/types/usuario";
 
 const metricColorClasses: Record<
   DashboardMetric["color"],
@@ -42,52 +64,170 @@ const metricColorClasses: Record<
   },
 };
 
-export default async function AdminDashboardPage() {
-  const data = await getAdminDashboardData();
+export default function AdminDashboardPage() {
+  const router = useRouter();
+
+  const [user, setUser] =
+    useState<UsuarioActivo>(MOCK_ADMIN);
+  const [data, setData] =
+    useState<AdminDashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] =
+    useState<string | null>(null);
+
+  const loadDashboard = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response =
+        await getAdminDashboardData();
+      setData(response);
+    } catch (loadError) {
+      if (
+        loadError instanceof ApiDashboardError &&
+        loadError.status === 401
+      ) {
+        clearSession();
+        router.replace("/login");
+        return;
+      }
+
+      if (
+        loadError instanceof ApiDashboardError &&
+        loadError.status === 403
+      ) {
+        setError(
+          "La cuenta autenticada no tiene permiso para consultar el dashboard administrativo."
+        );
+        return;
+      }
+
+      setError(
+        loadError instanceof Error
+          ? loadError.message
+          : "No se pudo cargar el dashboard."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, [router]);
+
+  useEffect(() => {
+    const session = getSession();
+
+    if (session?.user) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setUser(session.user);
+    }
+
+    void loadDashboard();
+  }, [loadDashboard]);
 
   return (
-    <DashboardLayout user={MOCK_ADMIN} active="dashboard">
-      <div className="admin-dashboard-animated">
-        <div className="mb-6 flex items-start justify-between gap-6">
-          <div>
-            <h1 className="text-[34px] font-extrabold leading-tight text-unsaac-text">
-              Panel principal del administrador
-            </h1>
-            <p className="mt-2 text-base font-semibold text-unsaac-muted">
-              Resumen general del sistema de asistencia biométrica docente.
-            </p>
+    <DashboardLayout user={user}>
+      {loading ? (
+        <LoadingState
+          title="Cargando dashboard"
+          description="Consultando información institucional actualizada."
+          fullHeight
+        />
+      ) : error || !data ? (
+        <ErrorState
+          title="No se pudo cargar el dashboard"
+          description={
+            error ??
+            "El servidor no devolvió información válida."
+          }
+          onRetry={loadDashboard}
+          fullHeight
+        />
+      ) : (
+        <div className="admin-dashboard-animated">
+          <PageHeader
+            eyebrow="Administración"
+            title="Panel principal del administrador"
+            description="Resumen actualizado del sistema de asistencia docente."
+            className="mb-6"
+            actions={
+              <>
+                <Button
+                  variant="outline"
+                  onClick={() =>
+                    void loadDashboard()
+                  }
+                >
+                  Actualizar
+                </Button>
+
+                <Button variant="secondary">
+                  Generar reporte
+                </Button>
+
+                <Button
+                  variant="primary"
+                  onClick={() =>
+                    router.push(
+                      "/admin/docentes"
+                    )
+                  }
+                >
+                  Nuevo docente
+                </Button>
+              </>
+            }
+          />
+
+          <div className="mb-6 flex flex-wrap items-center gap-3">
+            <Badge variant="info">
+              Información actualizada
+            </Badge>
+            <Badge variant="success">
+              Sistema en línea
+            </Badge>
+            <Badge variant="warning">
+              {data.summary.tardanzasHoy} tardanzas
+            </Badge>
+            <Badge variant="danger">
+              {data.summary.inasistenciasHoy} inasistencias
+            </Badge>
           </div>
 
-          <div className="flex items-center gap-3">
-            <Button variant="outline">Ver detalles</Button>
-            <Button variant="secondary">Generar reporte</Button>
-            <Button variant="primary">Nuevo registro</Button>
-          </div>
+          <section className="grid grid-cols-1 gap-5 xl:grid-cols-4">
+            {data.metrics.map((metric) => (
+              <MetricCard
+                key={metric.title}
+                metric={metric}
+              />
+            ))}
+          </section>
+
+          <VerificationMethodSummary
+            summary={data.verificationSummary}
+          />
+
+          <section className="mt-6 grid grid-cols-1 gap-5 xl:grid-cols-[2fr_1fr]">
+            <ActivityChart
+              data={data.hourlyActivity}
+            />
+            <RecentAlerts
+              alerts={data.recentAlerts}
+            />
+          </section>
+
+          <section className="mt-6 grid grid-cols-1 gap-5 xl:grid-cols-[2fr_1fr]">
+            <RecentAttendances
+              attendances={data.recentAttendances}
+              onViewAll={() =>
+                router.push("/admin/biometria/historial")
+              }
+            />
+            <BiometricSystemStatus
+              status={data.biometricStatus}
+            />
+          </section>
         </div>
-
-        <div className="mb-6 flex flex-wrap items-center gap-3">
-          <Badge variant="info">Tiempo real</Badge>
-          <Badge variant="success">Sistema operativo</Badge>
-          <Badge variant="warning">11 tardanzas</Badge>
-          <Badge variant="danger">16 inasistencias</Badge>
-        </div>
-
-        <section className="grid grid-cols-1 gap-5 xl:grid-cols-4">
-          {data.metrics.map((metric) => (
-            <MetricCard key={metric.title} metric={metric} />
-          ))}
-        </section>
-
-        <section className="mt-6 grid grid-cols-1 gap-5 xl:grid-cols-[2fr_1fr]">
-          <ActivityChart data={data.hourlyActivity} />
-          <RecentAlerts alerts={data.recentAlerts} />
-        </section>
-
-        <section className="mt-6 grid grid-cols-1 gap-5 xl:grid-cols-[2fr_1fr]">
-          <RecentAttendances attendances={data.recentAttendances} />
-          <BiometricSystemStatus status={data.biometricStatus} />
-        </section>
-      </div>
+      )}
     </DashboardLayout>
   );
 }
@@ -134,11 +274,14 @@ function MiniTrend({
   values: number[];
   color: DashboardMetric["color"];
 }) {
-  const max = Math.max(...values);
-  const min = Math.min(...values);
+  const safeValues =
+    values.length > 0 ? values : [0, 0];
+
+  const max = Math.max(...safeValues);
+  const min = Math.min(...safeValues);
   const range = Math.max(max - min, 1);
 
-  const points = values
+  const points = safeValues
     .map((value, index) => {
       const x = index * 22;
       const y = 34 - ((value - min) / range) * 26;
@@ -162,7 +305,14 @@ function MiniTrend({
 }
 
 function ActivityChart({ data }: { data: HourlyActivity[] }) {
-  const max = 50;
+  const highestValue = Math.max(
+    ...data.map((item) => item.value),
+    0
+  );
+  const max = Math.max(
+    10,
+    Math.ceil(highestValue / 10) * 10
+  );
 
   const points = data
     .map((item, index) => {
@@ -176,27 +326,31 @@ function ActivityChart({ data }: { data: HourlyActivity[] }) {
   const areaPoints = `40,190 ${points} ${lastX},190`;
 
   return (
-    <Card>
-      <CardHeader
-        title="Actividad de asistencia por hora"
-        description="Registros capturados durante la jornada académica."
-        action={
-          <div className="flex items-center gap-3">
-            <span className="flex items-center gap-2 text-xs font-extrabold text-unsaac-green">
-              <span className="h-2 w-2 rounded-full bg-unsaac-green" />
-              En vivo
-            </span>
+    <SectionCard
+      title="Actividad de asistencia por hora"
+      description="Registros capturados durante la jornada académica."
+      contentClassName="p-0"
+      action={
+        <div className="flex items-center gap-3">
+          <span className="flex items-center gap-2 text-xs font-extrabold text-unsaac-green">
+            <span className="h-2 w-2 rounded-full bg-unsaac-green" />
+            En vivo
+          </span>
 
-            <Button variant="outline" size="sm">
-              Hoy
-            </Button>
-          </div>
-        }
-      />
+          <Button variant="outline" size="sm">
+            Hoy
+          </Button>
+        </div>
+      }
+    >
 
       <CardContent>
         <svg viewBox="0 0 920 230" className="h-[220px] w-full">
-          {[0, 10, 20, 30, 40, 50].map((value) => {
+          {Array.from(
+            { length: 6 },
+            (_, index) =>
+              Math.round((max / 5) * index)
+          ).map((value) => {
             const y = 190 - (value / max) * 150;
 
             return (
@@ -262,31 +416,40 @@ function ActivityChart({ data }: { data: HourlyActivity[] }) {
           })}
         </svg>
       </CardContent>
-    </Card>
+    </SectionCard>
   );
 }
 
 function RecentAlerts({ alerts }: { alerts: RecentAlert[] }) {
   return (
-    <Card>
-      <CardHeader
-        title="Alertas recientes"
-        description="Últimos eventos generados por el sistema."
-        action={
-          <Button variant="ghost" size="sm">
-            Ver todas
-          </Button>
-        }
-      />
+    <SectionCard
+      title="Alertas recientes"
+      description="Últimos eventos generados por el sistema."
+      contentClassName="p-0"
+      action={
+        <Button variant="ghost" size="sm">
+          Ver todas
+        </Button>
+      }
+    >
 
       <CardContent className="pt-2">
-        <div className="divide-y divide-unsaac-border">
-          {alerts.map((alert) => (
-            <AlertRow key={alert.id} alert={alert} />
-          ))}
-        </div>
+        {alerts.length > 0 ? (
+          <div className="divide-y divide-unsaac-border">
+            {alerts.map((alert) => (
+              <AlertRow
+                key={alert.id}
+                alert={alert}
+              />
+            ))}
+          </div>
+        ) : (
+          <p className="py-8 text-center text-sm font-semibold text-unsaac-muted">
+            No existen alertas registradas en el sistema.
+          </p>
+        )}
       </CardContent>
-    </Card>
+    </SectionCard>
   );
 }
 
@@ -346,64 +509,147 @@ function AlertRow({ alert }: { alert: RecentAlert }) {
   );
 }
 
+
+function VerificationMethodSummary({
+  summary,
+}: {
+  summary: VerificationSummary;
+}) {
+  const items = [
+    { label: "Intentos", value: summary.totalAttempts, tone: "bg-slate-100 text-slate-700" },
+    { label: "Registradas", value: summary.registered, tone: "bg-emerald-100 text-emerald-700" },
+    { label: "Duplicadas", value: summary.duplicate, tone: "bg-amber-100 text-amber-700" },
+    { label: "Rechazadas", value: summary.rejected, tone: "bg-red-100 text-red-700" },
+    { label: "QR dinámico", value: summary.dynamicQr, tone: "bg-blue-100 text-blue-700" },
+    { label: "Biometría", value: summary.mobileBiometric, tone: "bg-indigo-100 text-indigo-700" },
+    { label: "Offline", value: summary.offline, tone: "bg-violet-100 text-violet-700" },
+    { label: "Manual / lector", value: summary.other, tone: "bg-orange-100 text-orange-700" },
+  ];
+
+  return (
+    <SectionCard
+      title="Métodos de verificación de hoy"
+      description="Intentos reales obtenidos de PostgreSQL, incluidos duplicados y rechazos."
+      className="mt-6"
+    >
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8">
+        {items.map((item) => (
+          <div
+            key={item.label}
+            className={`rounded-2xl px-4 py-4 ${item.tone}`}
+          >
+            <p className="text-xs font-extrabold uppercase tracking-wide opacity-75">
+              {item.label}
+            </p>
+            <p className="mt-2 text-2xl font-black">{item.value}</p>
+          </div>
+        ))}
+      </div>
+    </SectionCard>
+  );
+}
+
+function ResultPill({
+  result,
+}: {
+  result: RecentAttendance["resultado"];
+}) {
+  const classes =
+    result === "REGISTRADA"
+      ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+      : result === "DUPLICADA"
+        ? "border-amber-200 bg-amber-50 text-amber-700"
+        : result === "RECHAZADA"
+          ? "border-red-200 bg-red-50 text-red-700"
+          : "border-blue-200 bg-blue-50 text-blue-700";
+
+  return (
+    <span
+      className={`inline-flex rounded-full border px-3 py-1 text-xs font-extrabold ${classes}`}
+    >
+      {result.replace(/_/g, " ")}
+    </span>
+  );
+}
+
 function RecentAttendances({
   attendances,
+  onViewAll,
 }: {
   attendances: RecentAttendance[];
+  onViewAll: () => void;
 }) {
   return (
-    <Card>
-      <CardHeader
-        title="Registros recientes"
-        description="Últimas marcaciones registradas por dispositivo biométrico."
-        action={
-          <Button variant="ghost" size="sm">
-            Ver todos
-          </Button>
-        }
-      />
-
+    <SectionCard
+      title="Registros recientes"
+      description="Últimas asistencias de curso e ingresos institucionales."
+      contentClassName="p-0"
+      action={
+        <Button variant="ghost" size="sm" onClick={onViewAll}>
+          Ver todos
+        </Button>
+      }
+    >
       <CardContent>
-        <div className="overflow-hidden rounded-xl border border-unsaac-border">
-          <table className="w-full border-collapse text-left">
+        <div className="overflow-x-auto rounded-xl border border-unsaac-border">
+          <table className="w-full min-w-[920px] border-collapse text-left">
             <thead className="bg-slate-100">
               <tr>
                 <TableHead>Docente</TableHead>
+                <TableHead>Registro</TableHead>
                 <TableHead>Hora</TableHead>
                 <TableHead>Estado</TableHead>
+                <TableHead>Resultado</TableHead>
                 <TableHead>Aula</TableHead>
                 <TableHead>Método</TableHead>
               </tr>
             </thead>
 
             <tbody className="divide-y divide-unsaac-border">
-              {attendances.map((attendance) => (
-                <tr
-                  key={attendance.id}
-                  className="transition hover:bg-unsaac-content-soft"
-                >
-                  <td className="px-4 py-3 text-sm font-semibold text-unsaac-text">
-                    {attendance.docente}
-                  </td>
-                  <td className="px-4 py-3 text-sm font-semibold text-unsaac-muted">
-                    {attendance.hora}
-                  </td>
-                  <td className="px-4 py-3">
-                    <AttendanceBadge estado={attendance.estado} />
-                  </td>
-                  <td className="px-4 py-3 text-sm font-semibold text-unsaac-muted">
-                    {attendance.aula}
-                  </td>
-                  <td className="px-4 py-3 text-sm font-semibold text-unsaac-muted">
-                    {attendance.metodo}
+              {attendances.length > 0 ? (
+                attendances.map((attendance) => (
+                  <tr
+                    key={attendance.id}
+                    className="transition hover:bg-unsaac-content-soft"
+                  >
+                    <td className="px-4 py-3 text-sm font-semibold text-unsaac-text">
+                      {attendance.docente}
+                    </td>
+                    <td className="max-w-[260px] px-4 py-3 text-sm font-semibold text-unsaac-text">
+                      {attendance.registro ?? "Ingreso institucional"}
+                    </td>
+                    <td className="whitespace-nowrap px-4 py-3 text-sm font-extrabold text-unsaac-muted">
+                      {attendance.hora}
+                    </td>
+                    <td className="px-4 py-3">
+                      <StatusBadge status={attendance.estado} />
+                    </td>
+                    <td className="px-4 py-3">
+                      <ResultPill result={attendance.resultado} />
+                    </td>
+                    <td className="px-4 py-3 text-sm font-semibold text-unsaac-muted">
+                      {attendance.aula}
+                    </td>
+                    <td className="whitespace-nowrap px-4 py-3 text-sm font-semibold text-unsaac-muted">
+                      {attendance.metodo}
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td
+                    colSpan={7}
+                    className="px-4 py-10 text-center text-sm font-semibold text-unsaac-muted"
+                  >
+                    No existen asistencias registradas hoy.
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>
       </CardContent>
-    </Card>
+    </SectionCard>
   );
 }
 
@@ -415,32 +661,20 @@ function TableHead({ children }: { children: React.ReactNode }) {
   );
 }
 
-function AttendanceBadge({ estado }: { estado: RecentAttendance["estado"] }) {
-  if (estado === "Presente") {
-    return <Badge variant="success">Presente</Badge>;
-  }
-
-  if (estado === "Tardanza") {
-    return <Badge variant="warning">Tardanza</Badge>;
-  }
-
-  return <Badge variant="danger">Inasistencia</Badge>;
-}
-
 function BiometricSystemStatus({ status }: { status: BiometricStatus }) {
   const items = [
-    ["Dispositivos conectados", status.connectedDevices],
+    ["Dispositivos con actividad hoy", status.connectedDevices],
     ["Sincronización", status.syncStatus],
     ["Último registro", status.lastRecord],
     ["Servidor", status.serverStatus],
   ];
 
   return (
-    <Card>
-      <CardHeader
-        title="Estado del sistema biométrico"
-        description="Monitoreo general del servicio y dispositivos."
-      />
+    <SectionCard
+      title="Estado del sistema biométrico"
+      description="Monitoreo general del servicio y dispositivos."
+      contentClassName="p-0"
+    >
 
       <CardContent>
         <div className="flex items-center gap-5">
@@ -449,11 +683,13 @@ function BiometricSystemStatus({ status }: { status: BiometricStatus }) {
           </div>
 
           <div>
-            <p className="text-lg font-extrabold text-unsaac-green">
-              Sistema operativo
-            </p>
+            <StatusBadge
+              status="operativo"
+              label="Sistema operativo"
+              size="md"
+            />
             <p className="text-sm font-semibold text-unsaac-muted">
-              Todos los dispositivos funcionan correctamente
+              Información obtenida del backend y de los registros del día
             </p>
           </div>
         </div>
@@ -481,7 +717,7 @@ function BiometricSystemStatus({ status }: { status: BiometricStatus }) {
           Ver detalles del sistema →
         </Button>
       </CardContent>
-    </Card>
+    </SectionCard>
   );
 }
 
