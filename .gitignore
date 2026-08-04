@@ -1,5 +1,81 @@
-frontend/.env.local
-frontend/.env*.local
-frontend/.next/
-frontend/out/
-frontend/node_modules/
+# ==========================
+# BACKUPS Y ARCHIVOS TEMPORALES
+# ==========================
+
+_backups/
+BACKUP-*/
+*.bak
+*.backup
+*.backup-*
+*.backup-logo
+
+# Cambios generados
+cambios.txt
+
+# Variables backend
+backend/.env
+backend/.env.*
+!backend/.env.example
+
+# Logs backend
+backend/logs/
+
+# Scripts temporales de exportación
+Exportar-Proyecto.ps1
+Integrar-Frontend-L00S3RR-en-Gabo.ps1
+
+# Node
+**/node_modules/
+
+# Next build
+**/.next/
+**/out/
+
+# Archivos temporales
+*.tmp
+*.temp
+
+# Backups frontend login
+frontend/app/login/backup_*/
+frontend/app/login/*.backup*
+frontend/app/login/*.bak
+# ==========================
+# FLUTTER Y ANDROID
+# ==========================
+
+**/.dart_tool/
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+**/.packages
+**/.gradle/
+**/build/
+*.apk
+*.aab
+
+# ==========================
+# CREDENCIALES Y FIRMAS
+# ==========================
+
+*.jks
+*.keystore
+**/key.properties
+**/local.properties
+**/signing-secrets.*
+
+# ==========================
+# SALIDAS Y COBERTURA
+# ==========================
+
+**/dist/
+**/coverage/
+**/logs/
+*.log
+
+# ==========================
+# EDITORES Y SISTEMA
+# ==========================
+
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
