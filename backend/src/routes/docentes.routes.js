@@ -67,6 +67,16 @@ router.get('/stats', autenticar, soloRol('Administrador', 'Supervisor'), async (
 
 // GET /api/docentes/:id
 // Detalle de un docente específico
+router.get("/departamentos", autenticar, async (req, res) => {
+  try {
+    const result = await pool.query(`SELECT id, nombre FROM departamentos_academicos WHERE activo = true ORDER BY nombre`);
+    res.json({ departamentos: result.rows });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Error interno del servidor" });
+  }
+});
+
 router.get('/:id', autenticar, soloRol('Administrador', 'Supervisor'), async (req, res) => {
   try {
     const result = await pool.query(

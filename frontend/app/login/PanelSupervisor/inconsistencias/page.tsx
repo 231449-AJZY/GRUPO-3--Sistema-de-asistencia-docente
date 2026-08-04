@@ -1,0 +1,1 @@
+export default function InconsistenciasPage() { return <div className="p-6"><h1 className="text-[28px] font-extrabold text-unsaac-text">Inconsistencias</h1><p className="mt-2 text-unsaac-muted">Disponible en el siguiente sprint.</p></div>; }

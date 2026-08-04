@@ -84,10 +84,35 @@ export default function AdminDocentesPage() {
   function closeModal() { setModalOpen(false); setSelectedDocente(null); }
 
   async function handleSubmitDocente(data: DocenteFormData) {
-    // Editar — solo actualiza localmente por ahora
+    // Editar — llama a la API real
     if (modalMode === "edit" && selectedDocente) {
-      setDocentes((cur) => cur.map((d) => d.id === selectedDocente.id ? { ...d, ...data } : d));
-      closeModal();
+      try {
+        const res = await fetch(`/api/docentes/${selectedDocente.id}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${getToken()}`
+          },
+          body: JSON.stringify({
+            nombres:      data.nombres,
+            apellidos:    data.apellidos,
+            dni:          data.dni,
+            telefono:     data.telefono,
+            categoria:    data.categoria,
+            condicion:    data.categoria,
+            departamento: data.departamento,
+          })
+        });
+        const result = await res.json();
+        if (!res.ok) { alert(result.error || "Error al editar docente"); return; }
+        alert("✅ Docente actualizado correctamente");
+        const lista = await cargarDocentes();
+        setDocentes(lista);
+        closeModal();
+      } catch (err) {
+        console.error(err);
+        alert("Error de conexión con el servidor");
+      }
       return;
     }
 
@@ -121,7 +146,6 @@ export default function AdminDocentesPage() {
 
       alert(`✅ Docente registrado exitosamente.\nCódigo: ${result.codigo}\nContraseña temporal: ${result.passwordTemporal}`);
 
-      // Recargar lista desde la API
       const lista = await cargarDocentes();
       setDocentes(lista);
       closeModal();
@@ -132,10 +156,26 @@ export default function AdminDocentesPage() {
     }
   }
 
-  function handleToggleStatus(docente: Docente) {
-    setDocentes((cur) => cur.map((d) =>
-      d.id === docente.id ? { ...d, estado: d.estado === "Inactivo" ? "Activo" : "Inactivo" } : d
-    ));
+  async function handleToggleStatus(docente: Docente) {
+    try {
+      const activo = docente.estado === "Inactivo";
+      const res = await fetch(`/api/docentes/${docente.id}/estado`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${getToken()}`
+        },
+        body: JSON.stringify({ activo })
+      });
+      const data = await res.json();
+      if (!res.ok) { alert(data.error); return; }
+      setDocentes((cur) => cur.map((d) =>
+        d.id === docente.id ? { ...d, estado: activo ? "Activo" : "Inactivo" } : d
+      ));
+    } catch (err) {
+      console.error(err);
+      alert("Error de conexión con el servidor");
+    }
   }
 
   return (

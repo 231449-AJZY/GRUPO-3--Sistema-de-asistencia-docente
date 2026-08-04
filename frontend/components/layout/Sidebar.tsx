@@ -41,16 +41,16 @@ const menuByRole: Record<UserRole, MenuItem[]> = {
 
   SUPERVISOR: [
     { label: "Dashboard", key: "dashboard", href: "/login/PanelSupervisor" },
-    { label: "Tiempo real", key: "monitoreo", href: "/supervisor/monitoreo" },
+    { label: "Tiempo real", key: "monitoreo", href: "/login/PanelSupervisor/monitoreo" },
     {
       label: "Inconsistencias",
       key: "inconsistencias",
-      href: "/supervisor/inconsistencias",
+      href: "/login/PanelSupervisor/inconsistencias",
     },
-    { label: "Alertas", key: "alertas", href: "/supervisor/alertas" },
-    { label: "Consultas", key: "consultas", href: "/supervisor/consultas" },
-    { label: "Historial", key: "historial", href: "/supervisor/historial" },
-    { label: "Reportes", key: "reportes", href: "/supervisor/reportes" },
+    { label: "Alertas", key: "alertas", href: "/login/PanelSupervisor/alertas" },
+    { label: "Consultas", key: "consultas", href: "/login/PanelSupervisor/consultas" },
+    { label: "Historial", key: "historial", href: "/login/PanelSupervisor/historial" },
+    { label: "Reportes", key: "reportes", href: "/login/PanelSupervisor/reportes" },
   ],
 };
 
