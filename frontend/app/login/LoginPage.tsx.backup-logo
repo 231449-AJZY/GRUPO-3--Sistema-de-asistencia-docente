@@ -1,0 +1,197 @@
+"use client";
+
+import Image from "next/image";
+
+import { useLogin } from "./LoginUseL";
+import stylesB from "./BioMetric.module.css";
+import styles from "./LoginPage.module.css";
+import stylesH from "./Header.module.css"
+import "./global.css"
+
+export default function LoginPage() {
+  const {
+    username, password, showPassword, rememberSession, loading, message,role,setRole,
+    setUsername, setPassword, setRememberSession,
+    togglePassword, handleForgot, handleSubmit,
+  } = useLogin();
+
+  return (
+      <div>
+        <div className={stylesH.Encabezado}>
+          hola
+        </div>
+        <div className = {styles.pageWrapper}>
+          <div className={stylesB.BioM}>
+            <div className={stylesB.circule1}>
+              <div className={stylesB.circule2}>
+                <div className={stylesB.circule3}>
+                  <div className={stylesB.Ico}>
+                    <i className="fa-solid fa-fingerprint fa-9x" ></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className = {stylesB.text}>
+              <div style={{color:"rgba(210, 225, 255, 1)"}}>ValidaciÃ³n biomÃ©trica institucional</div>
+              <br></br>
+              <br></br>
+              <div style={{color:"rgba(140, 165, 215, 0.85)"}}>Huella digital Â· Identidad docente Â· Registro seguro</div>
+            </div>
+          </div>
+          <div className={styles.loginContainer}>
+            <div className={styles.loginCard}>
+          
+              {/* â”€â”€ Brand header â”€â”€ */}
+              <div className={styles.brandHeader}>
+                <div className={styles.universityBadge}>
+                  <Image
+                    src="/images/logo-unsaac.png"
+                    alt="Logo institucional de la UNSAAC"
+                    width={220}
+                    height={80}
+                    priority
+                    className={styles.universityLogo}
+                  />
+                </div>
+                <h1>Control de Asistencia Docente</h1>
+                <p>Sistema biomÃ©trico Â· trazabilidad en tiempo real</p>
+                <div className={styles.projectTag}>
+                  <i className="fas fa-chalkboard-user" /> PROYECTO SEMESTRAL 2026-I | METODOLOGÃAS ÃGILES
+                </div>
+              </div>
+
+              {/* â”€â”€ Form â”€â”€ */}
+              <div className={styles.formContent}>
+                <div className={styles.welcomeTitle}>Bienvenido</div>
+                <div className={styles.subLine}>
+                  Acceso seguro para docentes, supervisores y administradores
+                </div>
+
+                <form onSubmit={handleSubmit} noValidate>
+
+                  {/* Usuario */}
+                  <div className={styles.inputGroup}>
+                    <label>
+                      <i className="fas fa-user-graduate" /> Usuario institucional
+                    </label>
+                    <div className={styles.inputWrapper}>
+                      <i className={`fas fa-envelope ${styles.inputIcon}`} />
+                      <input
+                        type="text"
+                        className={styles.inputField}
+                        placeholder="correo@unsaac.edu.pe | cÃ³digo docente"
+                        autoComplete="username"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  {/* ContraseÃ±a */}
+                  <div className={styles.inputGroup}>
+                    <label>
+                      <i className="fas fa-lock" /> ContraseÃ±a
+                    </label>
+                    <div className={styles.inputWrapper}>
+                      <i className={`fas fa-key ${styles.inputIcon}`} />
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        className={styles.inputField}
+                        placeholder="Â·Â·Â·Â·Â·Â·Â·Â·Â·Â·Â·Â·"
+                        autoComplete="current-password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                      />
+                      <button
+                        type="button"
+                        className={styles.passwordToggle}
+                        onClick={togglePassword}
+                        aria-label={showPassword ? "Ocultar contraseÃ±a" : "Mostrar contraseÃ±a"}
+                      >
+                        <i className={showPassword ? "far fa-eye" : "far fa-eye-slash"} />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Opciones */}
+                  <div className={styles.optionsRow}>
+                    <label className={styles.remember}>
+                      <input
+                        type="checkbox"
+                        checked={rememberSession}
+                        onChange={(e) => setRememberSession(e.target.checked)}
+                      />
+                      <span>Recordar sesiÃ³n</span>
+                    </label>
+                    <a href="#" className={styles.forgotLink} onClick={handleForgot}>
+                      Â¿Problemas con huella o credenciales?
+                    </a>
+                  </div>
+
+                  {/*elegir rol */}
+                  <select
+                    className = {`${styles.rol} ${styles.Srol}`}
+                    value={role}
+                    onChange={(e) => setRole(e.target.value)}
+                  >
+                    <option value="docente">
+                      â™Ÿï¸Ž Docente
+                    </option>
+                    <option value="supervisor">
+                      âš™ Supervisor
+                    </option>
+                    <option value="administrador">
+                      â™• Administrador del sistema
+                    </option>
+                  </select>
+                  {/* Submit */}
+                  <button
+                    type="submit"
+                    className={`${styles.btnLogin} ${loading ? styles.loading : ""}`}
+                    disabled={loading}
+                  >
+                    <div className={styles.btnSpinner} />
+                    <span className={styles.btnLabel}>
+                      <i className="fas fa-arrow-right-to-bracket" /> Iniciar SesiÃ³n
+                    </span>
+                  </button>
+
+                  {/* Mensaje */}
+                  <div
+                    className={`${styles.messageArea} ${message.type === "error" ? styles.error : ""} ${message.type === "success" ? styles.success : ""}`}
+                    dangerouslySetInnerHTML={{ __html: message.html }}
+                  />
+                </form>
+
+                {/* Footer */}
+                <div className={styles.footerLinks}>
+                  <span>ðŸ”’ AutenticaciÃ³n biomÃ©trica integrada (huella / facial)</span>
+                  {" Â· "}
+                  <a href="#"><i className="fab fa-bitbucket" /> Soporte TI</a>
+                  <br />
+                  <small>Â© 2026 UNSAAC â€“ Proyecto de metodologÃ­as Scrum | Control de asistencia docente</small>
+                </div>
+              </div>
+
+            </div>
+          </div>
+          <div className={stylesB.BioM}>
+            <div className={stylesB.caja}>
+              <div className ={stylesB.burbuja}>
+                <div className={stylesB.Ico}>
+                  <i className="fa-solid fa-fingerprint fa-4x"></i>
+                </div>
+              </div>
+              
+            </div>
+            <div className = {stylesB.text}>
+              <div style={{color:"rgba(210, 225, 255, 1)"}}>Acceso protegido</div>
+              <br></br>
+              <br></br>
+              <div style={{color:"rgba(140, 165, 215, 0.85)"}}>JWT Â· bcrypt Â· HTTPS</div>
+            </div>
+          </div>
+      </div>
+    </div>
+  );
+}
