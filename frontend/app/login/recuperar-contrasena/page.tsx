@@ -1,19 +1,16 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import Button from "@/components/ui/Button";
-import { getDashboardPathByRole, mockLogin, saveSession } from "@/lib/auth";
+import { requestPasswordReset } from "@/lib/auth";
 
-export default function LoginPage() {
-  const router = useRouter();
-
-  const [correo, setCorreo] = useState("admin@unsaac.edu.pe");
-  const [password, setPassword] = useState("123456");
-  const [showPassword, setShowPassword] = useState(false);
+export default function RecuperarContrasenaPage() {
+  const [correo, setCorreo] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [sent, setSent] = useState(false);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -22,15 +19,11 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const response = await mockLogin({ correo, password });
-
-      saveSession(response.user, response.token);
-
-      const redirectTo = getDashboardPathByRole(response.user.rol);
-      router.push(redirectTo);
+      await requestPasswordReset({ correo });
+      setSent(true);
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "No se pudo iniciar sesión"
+        err instanceof Error ? err.message : "No se pudo enviar la solicitud"
       );
     } finally {
       setLoading(false);
@@ -45,7 +38,7 @@ export default function LoginPage() {
           "linear-gradient(135deg, #061B34 0%, #0A2E52 55%, #0D385F 100%)",
       }}
     >
-      {/* Decoración de fondo: sin los 3 circulitos superiores */}
+      {/* Decoración de fondo */}
       <div className="pointer-events-none absolute -left-24 -top-24 h-[420px] w-[420px] rounded-full bg-unsaac-blue/10" />
       <div className="pointer-events-none absolute right-[-120px] top-[95px] h-[260px] w-[260px] rounded-full bg-[#7FAAE9]/10" />
       <div className="pointer-events-none absolute bottom-[-140px] right-[-80px] h-[520px] w-[520px] rounded-full bg-unsaac-orange/10" />
@@ -60,20 +53,13 @@ export default function LoginPage() {
 
       {/* Header superior */}
       <header className="relative z-10 flex h-[130px] items-center px-12">
-        <div className="flex items-center gap-5">
-          <div className="flex h-[76px] w-[76px] items-center justify-center rounded-full border border-white/30">
-            <UniversityIcon className="h-11 w-11 text-white" />
-          </div>
-
-          <div>
-            <h1 className="text-[38px] font-extrabold leading-none tracking-wide">
-              UNSAAC
-            </h1>
-            <p className="mt-2 text-sm font-bold tracking-[0.32em] text-blue-100">
-              CUSCO
-            </p>
-          </div>
-        </div>
+        <Image
+          src="/logo-unsaac.png"
+          alt="UNSAAC - Universidad Nacional de San Antonio Abad del Cusco"
+          width={191}
+          height={68}
+          priority
+        />
 
         <div className="ml-10 h-14 w-[3px] rounded-full bg-unsaac-orange" />
 
@@ -102,13 +88,12 @@ export default function LoginPage() {
           </div>
 
           <h2 className="text-[58px] font-extrabold leading-[1.05] tracking-[-0.04em]">
-            Gestión moderna de asistencia docente
+            Recupera el acceso a tu cuenta institucional
           </h2>
 
           <p className="mt-7 max-w-[650px] text-lg font-semibold leading-8 text-blue-100">
-            Registre, supervise y consulte la asistencia docente mediante un
-            sistema web seguro, preparado para integración biométrica y reportes
-            institucionales.
+            Verifique su identidad mediante su correo institucional para
+            restablecer su contraseña de forma segura y rápida.
           </p>
 
           <div className="mt-10 grid max-w-[680px] grid-cols-3 gap-4">
@@ -119,30 +104,31 @@ export default function LoginPage() {
 
           <div className="mt-10 grid max-w-[680px] grid-cols-2 gap-4">
             <FeatureItem
-              title="Acceso por roles"
-              description="Administrador, docente y supervisor."
+              title="Verificación segura"
+              description="Proceso de confirmación institucional."
             />
             <FeatureItem
-              title="Reportes preparados"
-              description="Datos listos para conexión al backend."
+              title="Correo institucional"
+              description="Enlace de recuperación enviado."
             />
           </div>
         </div>
 
-        {/* Formulario */}
+        {/* Tarjeta de recuperación */}
         <div className="mx-auto w-full max-w-[520px]">
           <div className="rounded-[32px] border border-white/20 bg-white/95 p-8 text-unsaac-text shadow-2xl backdrop-blur">
             <div className="mb-8 text-center">
-              <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-[24px] bg-unsaac-orange text-3xl font-extrabold text-white shadow-lg">
-                U
+              <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-[24px] bg-unsaac-orange text-white shadow-lg">
+                <MailIcon className="h-9 w-9" />
               </div>
 
               <h1 className="text-[34px] font-extrabold">
-                Iniciar sesión
+                Recuperar contraseña
               </h1>
 
               <p className="mt-3 text-sm font-semibold leading-6 text-unsaac-muted">
-                Acceda al Sistema de Control de Asistencia Biométrica - UNSAAC.
+                Ingrese su correo institucional para recibir instrucciones de
+                recuperación.
               </p>
             </div>
 
@@ -153,9 +139,11 @@ export default function LoginPage() {
                 </label>
 
                 <div className="relative">
-                  <MailIcon className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-unsaac-muted" />
+                  <EnvelopeIcon className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-unsaac-muted" />
 
                   <input
+                    type="email"
+                    required
                     value={correo}
                     onChange={(event) => setCorreo(event.target.value)}
                     className="h-13 w-full rounded-2xl border border-unsaac-border bg-unsaac-content py-3 pl-12 pr-4 text-sm font-semibold text-unsaac-text outline-none transition focus:border-unsaac-blue focus:ring-4 focus:ring-blue-100"
@@ -164,105 +152,66 @@ export default function LoginPage() {
                 </div>
               </div>
 
-              <div>
-                <label className="mb-2 block text-sm font-extrabold text-unsaac-text">
-                  Contraseña
-                </label>
-
-                <div className="relative">
-                  <LockIcon className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-unsaac-muted" />
-
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    value={password}
-                    onChange={(event) => setPassword(event.target.value)}
-                    className="h-13 w-full rounded-2xl border border-unsaac-border bg-unsaac-content py-3 pl-12 pr-12 text-sm font-semibold text-unsaac-text outline-none transition focus:border-unsaac-blue focus:ring-4 focus:ring-blue-100"
-                    placeholder="Ingrese su contraseña"
-                  />
-
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword((value) => !value)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-unsaac-muted transition hover:text-unsaac-text"
-                    aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
-                  >
-                    {showPassword ? (
-                      <EyeOffIcon className="h-5 w-5" />
-                    ) : (
-                      <EyeIcon className="h-5 w-5" />
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between gap-4">
-                <label className="flex items-center gap-2 text-sm font-bold text-unsaac-muted">
-                  <input
-                    type="checkbox"
-                    className="h-4 w-4 rounded border-unsaac-border"
-                    defaultChecked
-                  />
-                  Recordar sesión
-                </label>
-
-                <Link
-                  href="/login/recuperar-contrasena"
-                  className="text-sm font-extrabold text-unsaac-blue hover:underline"
-                >
-                  ¿Olvidó su contraseña?
-                </Link>
-              </div>
-
               {error && (
                 <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-bold text-unsaac-red">
                   {error}
                 </div>
               )}
 
+              {sent && (
+                <div className="flex items-start gap-3 rounded-2xl border border-green-200 bg-green-50 px-4 py-3 text-sm font-bold text-unsaac-green">
+                  <CheckCircleIcon className="mt-0.5 h-5 w-5 shrink-0" />
+                  <span>
+                    Solicitud enviada correctamente.
+                    <br />
+                    Revise su correo institucional.
+                  </span>
+                </div>
+              )}
+
               <Button type="submit" fullWidth disabled={loading} size="lg">
-                {loading ? "Validando acceso..." : "Ingresar al sistema"}
+                {loading ? (
+                  "Enviando..."
+                ) : (
+                  <span className="inline-flex items-center justify-center gap-2">
+                    Enviar solicitud
+                    <ArrowRightIcon className="h-4 w-4" />
+                  </span>
+                )}
               </Button>
+
+              <Link
+                href="/login"
+                className="flex h-13 w-full items-center justify-center gap-2 rounded-2xl border border-unsaac-border bg-white text-sm font-extrabold text-unsaac-text transition hover:bg-unsaac-content-soft"
+              >
+                <ArrowLeftIcon className="h-4 w-4" />
+                Volver al inicio de sesión
+              </Link>
             </form>
 
             <div className="mt-8 rounded-2xl border border-unsaac-border bg-unsaac-content-soft p-5">
-              <p className="mb-4 text-xs font-extrabold uppercase tracking-[0.16em] text-unsaac-muted">
-                Usuarios de prueba
+              <p className="mb-2 text-xs font-extrabold uppercase tracking-[0.16em] text-unsaac-muted">
+                ¿Necesita ayuda?
               </p>
 
-              <div className="space-y-2 text-xs font-semibold text-unsaac-muted">
-                <p>
-                  <span className="font-extrabold text-unsaac-text">
-                    Administrador:
-                  </span>{" "}
-                  admin@unsaac.edu.pe
-                </p>
-
-                <p>
-                  <span className="font-extrabold text-unsaac-text">
-                    Docente:
-                  </span>{" "}
-                  mquispe@unsaac.edu.pe
-                </p>
-
-                <p>
-                  <span className="font-extrabold text-unsaac-text">
-                    Supervisor:
-                  </span>{" "}
-                  aquispe@unsaac.edu.pe
-                </p>
-
-                <p>
-                  <span className="font-extrabold text-unsaac-text">
-                    Contraseña:
-                  </span>{" "}
-                  123456
-                </p>
-              </div>
+              <p className="text-xs font-semibold leading-5 text-unsaac-muted">
+                Si no recibe el correo en 5 minutos, revise su carpeta de spam
+                o contacte a soporte técnico:{" "}
+                <a
+                  href="mailto:soporte@unsaac.edu.pe"
+                  className="font-extrabold text-unsaac-blue hover:underline"
+                >
+                  soporte@unsaac.edu.pe
+                </a>
+              </p>
             </div>
           </div>
 
           <p className="mt-6 text-center text-xs font-semibold text-blue-100">
             Universidad Nacional de San Antonio Abad del Cusco
+            <br />
+            Recuperación de acceso segura mediante verificación de correo
+            institucional
           </p>
         </div>
       </section>
@@ -301,39 +250,6 @@ function FeatureItem({
   );
 }
 
-function UniversityIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none">
-      <path
-        d="M3 21h18"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-      />
-      <path
-        d="M5 21V8l7-4 7 4v13"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M9 21v-7h6v7"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M8 10h.01M12 10h.01M16 10h.01"
-        stroke="currentColor"
-        strokeWidth="2.4"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
 function LockIcon({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none">
@@ -356,48 +272,6 @@ function LockIcon({ className }: { className?: string }) {
   );
 }
 
-function EyeIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none">
-      <path
-        d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2" />
-    </svg>
-  );
-}
-
-function EyeOffIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none">
-      <path
-        d="M3 3l18 18"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-      />
-      <path
-        d="M10.58 10.58a2 2 0 0 0 2.83 2.83"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M9.36 5.3A10.4 10.4 0 0 1 12 5c6.5 0 10 7 10 7a13.2 13.2 0 0 1-3.06 3.98M6.6 6.6C4.2 8.1 2 12 2 12s3.5 7 10 7a9.9 9.9 0 0 0 4.24-.94"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
 function MailIcon({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none">
@@ -412,6 +286,72 @@ function MailIcon({ className }: { className?: string }) {
       />
       <path
         d="M4 7l8 6 8-6"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function EnvelopeIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none">
+      <rect
+        x="3"
+        y="5"
+        width="18"
+        height="14"
+        rx="2"
+        stroke="currentColor"
+        strokeWidth="2"
+      />
+      <path
+        d="M4 7l8 6 8-6"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function CheckCircleIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none">
+      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
+      <path
+        d="m8.5 12.5 2.5 2.5 4.5-5"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function ArrowRightIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none">
+      <path
+        d="M5 12h14M13 6l6 6-6 6"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function ArrowLeftIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none">
+      <path
+        d="M19 12H5M11 6l-6 6 6 6"
         stroke="currentColor"
         strokeWidth="2"
         strokeLinecap="round"

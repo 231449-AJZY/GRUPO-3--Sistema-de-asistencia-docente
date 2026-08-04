@@ -42,6 +42,35 @@ export async function mockLogin({
   return { user, token: data.token };
 }
 
+interface RequestPasswordResetPayload {
+  correo: string;
+}
+
+/**
+ * Solicita la recuperación de contraseña para un correo institucional.
+ *
+ * Implementación actual: solo frontend (no existe todavía el endpoint en el
+ * backend). Cuando esté disponible, reemplazar el cuerpo por algo como:
+ *
+ *   const res = await fetch("/api/auth/forgot-password", {
+ *     method: "POST",
+ *     headers: { "Content-Type": "application/json" },
+ *     body: JSON.stringify({ correo }),
+ *   });
+ *   const data = await res.json();
+ *   if (!res.ok) throw new Error(data.error || "No se pudo enviar la solicitud");
+ */
+export async function requestPasswordReset({
+  correo,
+}: RequestPasswordResetPayload): Promise<void> {
+  if (!correo.trim()) {
+    throw new Error("Ingrese su correo institucional.");
+  }
+
+  // Simula la latencia de red mientras no exista el endpoint real.
+  await new Promise((resolve) => setTimeout(resolve, 900));
+}
+
 export function getDashboardPathByRole(role: UserRole): string {
   if (role === "ADMINISTRADOR") return "/Admin/dashboard";
   if (role === "DOCENTE")       return "/login/PanelDocente";
