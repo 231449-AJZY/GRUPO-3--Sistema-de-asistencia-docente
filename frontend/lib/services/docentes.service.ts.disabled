@@ -1,0 +1,334 @@
+import type {
+  CategoriaDocente,
+  Docente,
+  DocenteFormData,
+  EstadoBiometrico,
+  EstadoDocente,
+} from "@/types/docente";
+
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL ??
+  "http://localhost:3000/api";
+
+interface BackendDocente {
+  id: number | string;
+  codigo?: string;
+  dni?: string | null;
+  nombres?: string;
+  apellidos?: string;
+  correo?: string;
+  email?: string;
+  telefono?: string | null;
+  departamento?: string;
+  categoria?: string | null;
+  estadoBiometrico?: string;
+  estado_biometrico?: string;
+  activo?: boolean;
+  estado?: string;
+  fechaRegistro?: string;
+  fecha_registro?: string;
+}
+
+interface DocentesResponse {
+  docentes: BackendDocente[];
+}
+
+interface DocenteResponse {
+  docente: BackendDocente;
+  mensaje?: string;
+  passwordTemporal?: string;
+}
+
+export interface DocenteStats {
+  total: number;
+  activos: number;
+  inactivos: number;
+  biometricos: number;
+  pendientesBiometricos: number;
+}
+
+interface DocenteStatsResponse {
+  docentes: DocenteStats;
+  porDepartamento: Array<{
+    departamento: string;
+    total: number;
+  }>;
+}
+
+export interface CreateDocenteResult {
+  docente: Docente;
+  mensaje: string;
+  passwordTemporal?: string;
+}
+
+export class ApiDocentesError extends Error {
+  status: number;
+
+  constructor(
+    message: string,
+    status: number
+  ) {
+    super(message);
+    this.name = "ApiDocentesError";
+    this.status = status;
+  }
+}
+
+function getToken(): string | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  return (
+    window.localStorage.getItem(
+      "unsaac_token"
+    ) ??
+    window.localStorage.getItem("token") ??
+    window.sessionStorage.getItem(
+      "unsaac_token"
+    ) ??
+    window.sessionStorage.getItem("token")
+  );
+}
+
+async function apiRequest<T>(
+  path: string,
+  init: RequestInit = {}
+): Promise<T> {
+  const token = getToken();
+
+  if (!token) {
+    throw new ApiDocentesError(
+      "No existe una sesión válida. Inicie sesión nuevamente.",
+      401
+    );
+  }
+
+  const response = await fetch(
+    `${API_URL}${path}`,
+    {
+      ...init,
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+        ...init.headers,
+      },
+      cache: "no-store",
+    }
+  );
+
+  const data = await response
+    .json()
+    .catch(() => null);
+
+  if (!response.ok) {
+    const message =
+      data &&
+      typeof data.error === "string"
+        ? data.error
+        : "No se pudo completar la operación.";
+
+    throw new ApiDocentesError(
+      message,
+      response.status
+    );
+  }
+
+  return data as T;
+}
+
+function normalizeCategory(
+  value?: string | null
+): CategoriaDocente {
+  const allowed: CategoriaDocente[] = [
+    "Principal",
+    "Asociado",
+    "Auxiliar",
+    "Contratado",
+  ];
+
+  return allowed.includes(
+    value as CategoriaDocente
+  )
+    ? (value as CategoriaDocente)
+    : "Contratado";
+}
+
+function normalizeBiometricStatus(
+  value?: string
+): EstadoBiometrico {
+  return value === "Registrado"
+    ? "Registrado"
+    : "Pendiente";
+}
+
+function normalizeTeacherStatus(
+  value?: string,
+  active?: boolean
+): EstadoDocente {
+  if (
+    value === "Activo" ||
+    value === "En pausa" ||
+    value === "Inactivo"
+  ) {
+    return value;
+  }
+
+  return active ? "Activo" : "Inactivo";
+}
+
+function normalizeDocente(
+  raw: BackendDocente
+): Docente {
+  return {
+    id: Number(raw.id),
+    codigo: raw.codigo ?? "",
+    dni: raw.dni ?? "",
+    nombres: raw.nombres ?? "",
+    apellidos: raw.apellidos ?? "",
+    correo:
+      raw.correo ??
+      raw.email ??
+      "",
+    telefono: raw.telefono ?? "",
+    departamento: raw.departamento ?? "",
+    categoria: normalizeCategory(
+      raw.categoria
+    ),
+    estadoBiometrico:
+      normalizeBiometricStatus(
+        raw.estadoBiometrico ??
+          raw.estado_biometrico
+      ),
+    estado: normalizeTeacherStatus(
+      raw.estado,
+      raw.activo
+    ),
+    fechaRegistro:
+      raw.fechaRegistro ??
+      raw.fecha_registro ??
+      "",
+  };
+}
+
+function toBackendPayload(
+  data: DocenteFormData
+) {
+  return {
+    nombres: data.nombres,
+    apellidos: data.apellidos,
+    dni: data.dni,
+    correo: data.correo,
+    telefono: data.telefono,
+    departamento: data.departamento,
+    categoria: data.categoria,
+    condicion:
+      data.categoria === "Contratado"
+        ? "Contratado"
+        : "Nombrado",
+    estado: data.estado,
+
+    /*
+     * El estado biométrico no se modifica aquí.
+     * Se administrará desde el módulo Biometría.
+     */
+  };
+}
+
+export async function getDocentes(): Promise<
+  Docente[]
+> {
+  const response =
+    await apiRequest<DocentesResponse>(
+      "/docentes"
+    );
+
+  return response.docentes.map(
+    normalizeDocente
+  );
+}
+
+export async function getDocenteById(
+  docenteId: number
+): Promise<Docente> {
+  const response =
+    await apiRequest<DocenteResponse>(
+      `/docentes/${docenteId}`
+    );
+
+  return normalizeDocente(
+    response.docente
+  );
+}
+
+export async function getDocenteStats(): Promise<
+  DocenteStatsResponse
+> {
+  return apiRequest<DocenteStatsResponse>(
+    "/docentes/stats"
+  );
+}
+
+export async function createDocente(
+  data: DocenteFormData
+): Promise<CreateDocenteResult> {
+  const response =
+    await apiRequest<DocenteResponse>(
+      "/docentes",
+      {
+        method: "POST",
+        body: JSON.stringify(
+          toBackendPayload(data)
+        ),
+      }
+    );
+
+  return {
+    docente: normalizeDocente(
+      response.docente
+    ),
+    mensaje:
+      response.mensaje ??
+      "Docente registrado correctamente.",
+    passwordTemporal:
+      response.passwordTemporal,
+  };
+}
+
+export async function updateDocente(
+  docenteId: number,
+  data: DocenteFormData
+): Promise<Docente> {
+  const response =
+    await apiRequest<DocenteResponse>(
+      `/docentes/${docenteId}`,
+      {
+        method: "PUT",
+        body: JSON.stringify(
+          toBackendPayload(data)
+        ),
+      }
+    );
+
+  return normalizeDocente(
+    response.docente
+  );
+}
+
+export async function changeDocenteStatus(
+  docenteId: number,
+  activo: boolean
+): Promise<Docente> {
+  const response =
+    await apiRequest<DocenteResponse>(
+      `/docentes/${docenteId}/estado`,
+      {
+        method: "PUT",
+        body: JSON.stringify({ activo }),
+      }
+    );
+
+  return normalizeDocente(
+    response.docente
+  );
+}

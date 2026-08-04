@@ -1,0 +1,738 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  color: var(--unsaac-text);
+}
+
+.backRow {
+  display: flex;
+  align-items: center;
+}
+
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--unsaac-blue);
+  font-size: 13px;
+  font-weight: 800;
+  transition:
+    gap 0.18s ease,
+    color 0.18s ease;
+}
+
+.backLink:hover {
+  gap: 11px;
+  color: #1d4ed8;
+}
+
+.backLink svg {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.mobileBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #bbf7d0;
+  border-radius: 999px;
+  background: #f0fdf4;
+  padding: 7px 12px;
+  color: #15803d;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.mobileBadge > span {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #22c55e;
+  box-shadow: 0 0 0 4px rgb(34 197 94 / 12%);
+}
+
+.metricsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.metricCard {
+  display: flex;
+  min-height: 142px;
+  align-items: flex-start;
+  gap: 16px;
+  border: 1px solid #dfe7f1;
+  border-radius: 22px;
+  background: #ffffff;
+  padding: 20px;
+  box-shadow: 0 8px 26px rgb(15 33 58 / 6%);
+}
+
+.metricIcon {
+  display: flex;
+  width: 50px;
+  height: 50px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px;
+}
+
+.metricIcon svg {
+  width: 25px;
+  height: 25px;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.metricgreen {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.metricblue {
+  background: #dbeafe;
+  color: #2563eb;
+}
+
+.metricamber {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.metricred {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.metricTitle {
+  color: var(--unsaac-text);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.metricValue {
+  display: block;
+  margin-top: 6px;
+  font-size: 27px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.valuegreen {
+  color: #16a34a;
+}
+
+.valueblue {
+  color: #2563eb;
+}
+
+.valueamber {
+  color: #d97706;
+}
+
+.valuered {
+  color: #dc2626;
+}
+
+.metricDescription {
+  margin-top: 8px;
+  color: var(--unsaac-muted);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.mainGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(340px, 0.75fr);
+  gap: 20px;
+}
+
+.validationCard,
+.flowCard,
+.historyCard {
+  overflow: hidden;
+  border: 1px solid #dfe7f1;
+  border-radius: 24px;
+  background: #ffffff;
+  box-shadow: 0 8px 28px rgb(15 33 58 / 7%);
+}
+
+.validationCard > header,
+.flowCard > header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 20px 22px;
+}
+
+.flowCard > header {
+  display: block;
+}
+
+.eyebrow {
+  color: var(--unsaac-blue);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.validationCard h2,
+.flowCard h2,
+.historyHeader h2 {
+  margin-top: 5px;
+  color: var(--unsaac-text);
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.validationCard header p:last-child,
+.flowCard header p:last-child,
+.historyHeader p {
+  margin-top: 5px;
+  color: var(--unsaac-muted);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.6;
+}
+
+.statusBadge {
+  display: inline-flex;
+  min-width: 88px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.statusBadge > span {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: currentColor;
+}
+
+.statussuccess {
+  border-color: #bbf7d0;
+  background: #f0fdf4;
+  color: #15803d;
+}
+
+.statuswarning {
+  border-color: #fde68a;
+  background: #fffbeb;
+  color: #b45309;
+}
+
+.statusdanger {
+  border-color: #fecaca;
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.statusneutral {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+  color: #64748b;
+}
+
+.fingerprintArea {
+  display: flex;
+  min-height: 425px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 34px 26px;
+  text-align: center;
+}
+
+.fingerprintHalo {
+  position: relative;
+  display: flex;
+  width: 180px;
+  height: 180px;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed #93c5fd;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle, #eff6ff 0 44%, transparent 45%),
+    #ffffff;
+}
+
+.fingerprintHalo::before,
+.fingerprintHalo::after {
+  position: absolute;
+  border: 1px solid #bfdbfe;
+  border-radius: inherit;
+  content: "";
+}
+
+.fingerprintHalo::before {
+  inset: 18px;
+}
+
+.fingerprintHalo::after {
+  inset: 36px;
+}
+
+.registeredHalo {
+  border-color: #86efac;
+  background:
+    radial-gradient(circle, #f0fdf4 0 44%, transparent 45%),
+    #ffffff;
+}
+
+.registeredHalo::before,
+.registeredHalo::after {
+  border-color: #bbf7d0;
+}
+
+.fingerprintIcon {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  width: 78px;
+  height: 78px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 24px;
+  background: var(--unsaac-blue);
+  color: #ffffff;
+  box-shadow: 0 14px 34px rgb(37 99 235 / 24%);
+}
+
+.registeredHalo .fingerprintIcon {
+  background: #16a34a;
+  box-shadow: 0 14px 34px rgb(22 163 74 / 22%);
+}
+
+.fingerprintIcon svg {
+  width: 46px;
+  height: 46px;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.fingerprintArea h3 {
+  margin-top: 26px;
+  color: var(--unsaac-text);
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.fingerprintArea > p {
+  max-width: 600px;
+  margin-top: 9px;
+  color: var(--unsaac-muted);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.75;
+}
+
+.readOnlyNotice {
+  display: flex;
+  min-width: min(100%, 410px);
+  align-items: center;
+  gap: 12px;
+  margin-top: 24px;
+  border: 1px solid #bfdbfe;
+  border-radius: 16px;
+  background: #eff6ff;
+  padding: 13px 16px;
+  text-align: left;
+}
+
+.readOnlyNotice svg {
+  width: 28px;
+  height: 28px;
+  flex: 0 0 auto;
+  stroke: var(--unsaac-blue);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.readOnlyNotice strong,
+.readOnlyNotice span {
+  display: block;
+}
+
+.readOnlyNotice strong {
+  color: var(--unsaac-text);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.readOnlyNotice span {
+  margin-top: 2px;
+  color: var(--unsaac-muted);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.stepsList {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 10px 22px;
+}
+
+.stepsList li {
+  position: relative;
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  gap: 13px;
+  padding: 15px 0;
+}
+
+.stepsList li + li {
+  border-top: 1px solid #f1f5f9;
+}
+
+.stepsList li > span {
+  display: flex;
+  width: 36px;
+  height: 36px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: #eff6ff;
+  color: var(--unsaac-blue);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.stepsList strong {
+  color: var(--unsaac-text);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.stepsList p {
+  margin-top: 4px;
+  color: var(--unsaac-muted);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.55;
+}
+
+.flowFooter {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  border-top: 1px solid #e2e8f0;
+  background: #f8fafc;
+  padding: 16px 22px;
+}
+
+.phoneIcon {
+  display: flex;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  background: #fff7ed;
+  color: #ea580c;
+}
+
+.phoneIcon svg {
+  width: 23px;
+  height: 23px;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.flowFooter strong {
+  color: var(--unsaac-text);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.flowFooter p {
+  margin-top: 3px;
+  color: var(--unsaac-muted);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.historyHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 20px 22px;
+}
+
+.historyCount {
+  flex: 0 0 auto;
+  border: 1px solid #bfdbfe;
+  border-radius: 999px;
+  background: #eff6ff;
+  padding: 7px 11px;
+  color: var(--unsaac-blue);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.tableScroll {
+  overflow-x: auto;
+}
+
+.historyTable {
+  width: 100%;
+  min-width: 760px;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.historyTable thead {
+  border-bottom: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.historyTable th {
+  padding: 13px 18px;
+  color: #64748b;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.historyTable tbody tr + tr {
+  border-top: 1px solid #f1f5f9;
+}
+
+.historyTable tbody tr {
+  transition: background-color 0.18s ease;
+}
+
+.historyTable tbody tr:hover {
+  background: #f8fafc;
+}
+
+.historyTable td {
+  padding: 15px 18px;
+  color: var(--unsaac-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.historyTable td strong {
+  color: var(--unsaac-text);
+  font-weight: 800;
+}
+
+.timeCell {
+  color: var(--unsaac-text) !important;
+  font-weight: 800 !important;
+  font-variant-numeric: tabular-nums;
+}
+
+.emptyCell {
+  padding: 42px 18px !important;
+  color: #94a3b8 !important;
+  text-align: center;
+}
+
+@media (max-width: 1280px) {
+  .metricsGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .mainGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 680px) {
+  .metricsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .validationCard > header,
+  .historyHeader {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .fingerprintArea {
+    min-height: 390px;
+    padding-inline: 18px;
+  }
+
+  .fingerprintHalo {
+    width: 150px;
+    height: 150px;
+  }
+
+  .readOnlyNotice {
+    min-width: 0;
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .backLink {
+    transition: none;
+  }
+}
+/* PASO 8H.2T - TIPOGRAFIA ADMINISTRADOR: INICIO */
+
+/*
+  Escala homologada con Administrador:
+  - encabezados de sección: 18-22 px
+  - contenido y descripciones: 13-14 px
+  - etiquetas: 11-13 px
+  - métricas: 30 px
+*/
+
+.backLink {
+  font-size: 14px;
+}
+
+.mobileBadge {
+  font-size: 13px;
+}
+
+.metricTitle {
+  font-size: 13px;
+}
+
+.metricValue {
+  font-size: 30px;
+}
+
+.metricDescription {
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.eyebrow {
+  font-size: 11px;
+}
+
+.validationCard h2,
+.flowCard h2,
+.historyHeader h2 {
+  font-size: 20px;
+}
+
+.validationCard header p:last-child,
+.flowCard header p:last-child,
+.historyHeader p {
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.statusBadge {
+  min-width: 92px;
+  padding: 7px 11px;
+  font-size: 11px;
+}
+
+.fingerprintArea h3 {
+  font-size: 22px;
+}
+
+.fingerprintArea > p {
+  font-size: 14px;
+  line-height: 1.75;
+}
+
+.readOnlyNotice strong {
+  font-size: 13px;
+}
+
+.readOnlyNotice span {
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.stepsList strong {
+  font-size: 13px;
+}
+
+.stepsList p {
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.flowFooter strong {
+  font-size: 13px;
+}
+
+.flowFooter p {
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.historyCount {
+  font-size: 12px;
+}
+
+.historyTable th {
+  font-size: 11px;
+}
+
+.historyTable td {
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.historyTable td strong {
+  font-size: 13px;
+}
+
+.emptyCell {
+  font-size: 14px !important;
+}
+
+@media (max-width: 680px) {
+  .validationCard h2,
+  .flowCard h2,
+  .historyHeader h2 {
+    font-size: 19px;
+  }
+
+  .fingerprintArea h3 {
+    font-size: 21px;
+  }
+
+  .validationCard header p:last-child,
+  .flowCard header p:last-child,
+  .historyHeader p,
+  .fingerprintArea > p {
+    font-size: 14px;
+  }
+}
+
+/* PASO 8H.2T - TIPOGRAFIA ADMINISTRADOR: FIN */

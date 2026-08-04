@@ -1,0 +1,15 @@
+{
+  "adapterCommand": "",
+  "adapterArgs": [],
+  "timeoutMs": 30000,
+  "device": {
+    "codigo": "LECTOR-LOCAL-01",
+    "nombre": "Lector biométrico del administrador",
+    "fabricante": "",
+    "modelo": "",
+    "numero_serie": "",
+    "ubicacion": "Equipo administrador",
+    "version_sdk": "",
+    "version_firmware": ""
+  }
+}

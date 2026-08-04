@@ -34,3 +34,8 @@ Integrar-Frontend-L00S3RR-en-Gabo.ps1
 # Archivos temporales
 *.tmp
 *.temp
+
+# Backups frontend login
+frontend/app/login/backup_*/
+frontend/app/login/*.backup*
+frontend/app/login/*.bak

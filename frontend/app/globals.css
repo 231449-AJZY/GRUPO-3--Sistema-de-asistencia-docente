@@ -276,3 +276,265 @@ a {
     transition: none !important;
   }
 }
+/* ============================================================
+   PASO 8H.8 - NORMALIZACION RESPONSIVE DEL MODULO DOCENTE
+   ============================================================ */
+.docente-module-scope {
+  --docente-readable-xs: 0.75rem;
+  --docente-readable-sm: 0.875rem;
+  --docente-readable-base: 1rem;
+  font-size: 16px;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+.docente-module-content {
+  min-width: 0;
+  overflow-x: clip;
+}
+
+.docente-module-content > * {
+  width: 100%;
+  min-width: 0;
+}
+
+.docente-module-content :where(h1) {
+  font-size: clamp(1.75rem, 2.4vw, 2.125rem) !important;
+  line-height: 1.18 !important;
+}
+
+.docente-module-content :where(h2) {
+  font-size: clamp(1.2rem, 1.6vw, 1.4rem) !important;
+  line-height: 1.3 !important;
+}
+
+.docente-module-content
+  :where(
+    p:not([class*="eyebrow"]):not([class*="Eyebrow"]),
+    label,
+    dd
+  ) {
+  line-height: 1.6;
+}
+
+.docente-module-content
+  :where(
+    button,
+    input,
+    select,
+    textarea
+  ) {
+  min-height: 44px;
+  font-size: 0.875rem !important;
+}
+
+.docente-module-content
+  :where(button, a, input, select, textarea) {
+  touch-action: manipulation;
+}
+
+.docente-module-content
+  :where(input, select, textarea):focus-visible,
+.docente-module-content
+  :where(button, a):focus-visible {
+  outline: 3px solid rgb(37 99 235 / 24%);
+  outline-offset: 2px;
+}
+
+.docente-module-content
+  [class*="metricTitle"] {
+  font-size: 0.875rem !important;
+}
+
+.docente-module-content
+  [class*="metricDescription"] {
+  font-size: 0.8125rem !important;
+  line-height: 1.6 !important;
+}
+
+.docente-module-content
+  [class*="metricValue"] {
+  font-size: clamp(1.75rem, 2.4vw, 2.1rem) !important;
+}
+
+.docente-module-content
+  [class*="filterField"] > span,
+.docente-module-content
+  [class*="fieldRow"] dt,
+.docente-module-content
+  [class*="statusRow"] p {
+  font-size: 0.8125rem !important;
+}
+
+.docente-module-content
+  :where(table) {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.docente-module-content
+  :where(th) {
+  font-size: 0.75rem !important;
+  line-height: 1.45 !important;
+}
+
+.docente-module-content
+  :where(td) {
+  font-size: 0.875rem !important;
+  line-height: 1.55 !important;
+}
+
+.docente-module-content
+  :where(th, td) {
+  vertical-align: middle;
+}
+
+.docente-module-content
+  [class*="tableScroll"] {
+  max-width: 100%;
+  overscroll-behavior-inline: contain;
+  scrollbar-width: thin;
+}
+
+.docente-module-content
+  [class*="tableScroll"]::-webkit-scrollbar {
+  height: 10px;
+}
+
+.docente-module-content
+  [class*="tableScroll"]::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: #94a3b8;
+  background-clip: padding-box;
+}
+
+.docente-module-content
+  :where(
+    [class*="metricCard"],
+    [class*="filterCard"],
+    [class*="historyCard"],
+    [class*="infoCard"],
+    [class*="securityCard"],
+    [class*="coursesCard"],
+    [class*="weekdayCard"],
+    [class*="trendCard"],
+    [class*="summaryCard"]
+  ) {
+  min-width: 0;
+}
+
+.docente-module-content
+  :where(
+    [class*="headerActions"],
+    [class*="heroActions"]
+  )
+  button {
+  min-height: 44px;
+  padding-inline: 1rem;
+}
+
+@media (max-width: 1279px) {
+  .docente-module-content
+    :where(
+      [class*="metricsGrid"],
+      [class*="analysisGrid"],
+      [class*="informationGrid"],
+      [class*="securityGrid"]
+    ) {
+    min-width: 0;
+  }
+}
+
+@media (max-width: 767px) {
+  .docente-module-content {
+    font-size: 15px;
+  }
+
+  .docente-module-content :where(h1) {
+    font-size: 1.65rem !important;
+  }
+
+  .docente-module-content :where(h2) {
+    font-size: 1.2rem !important;
+  }
+
+  .docente-module-content
+    :where(
+      p:not([class*="eyebrow"]):not([class*="Eyebrow"])
+    ) {
+    font-size: 0.875rem;
+  }
+
+  .docente-module-content
+    :where(
+      [class*="metricCard"],
+      [class*="filterCard"],
+      [class*="historyCard"],
+      [class*="infoCard"],
+      [class*="securityCard"],
+      [class*="coursesCard"],
+      [class*="weekdayCard"],
+      [class*="trendCard"],
+      [class*="summaryCard"],
+      [class*="profileHero"]
+    ) {
+    border-radius: 1.125rem !important;
+  }
+
+  .docente-module-content
+    [class*="tableScroll"] {
+    margin-inline: -1px;
+  }
+
+  .docente-module-content
+    [class*="tableScroll"] table {
+    min-width: 760px;
+  }
+
+  .docente-module-content
+    :where(th, td) {
+    white-space: nowrap;
+  }
+
+  .docente-module-content
+    :where(button, input, select, textarea) {
+    min-height: 46px;
+  }
+}
+
+@media (max-width: 420px) {
+  .docente-module-content {
+    font-size: 14px;
+  }
+
+  .docente-module-content :where(h1) {
+    font-size: 1.5rem !important;
+  }
+
+  .docente-module-content
+    :where(
+      [class*="metricCard"],
+      [class*="filterCard"],
+      [class*="historyCard"],
+      [class*="infoCard"],
+      [class*="securityCard"],
+      [class*="coursesCard"],
+      [class*="weekdayCard"],
+      [class*="trendCard"],
+      [class*="summaryCard"],
+      [class*="profileHero"]
+    ) {
+    padding-left: 0;
+    padding-right: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .docente-module-scope *,
+  .docente-module-scope *::before,
+  .docente-module-scope *::after {
+    scroll-behavior: auto !important;
+  }
+}
+/* FIN PASO 8H.8 */

@@ -1,3 +1,10 @@
+export interface DashboardSummary {
+  docentesActivos: number;
+  asistenciasHoy: number;
+  tardanzasHoy: number;
+  inasistenciasHoy: number;
+}
+
 export interface DashboardMetric {
   title: string;
   value: number;
@@ -21,12 +28,30 @@ export interface RecentAlert {
 }
 
 export interface RecentAttendance {
-  id: number;
+  id: number | string;
   docente: string;
+  registro?: string;
   hora: string;
   estado: "Presente" | "Tardanza" | "Inasistencia";
   aula: string;
-  metodo: "Biométrico" | "Manual";
+  metodo: string;
+  resultado:
+    | "REGISTRADA"
+    | "DUPLICADA"
+    | "RECHAZADA"
+    | "PENDIENTE"
+    | "REQUIERE_REVISION";
+}
+
+export interface VerificationSummary {
+  totalAttempts: number;
+  registered: number;
+  duplicate: number;
+  rejected: number;
+  dynamicQr: number;
+  mobileBiometric: number;
+  offline: number;
+  other: number;
 }
 
 export interface BiometricStatus {
@@ -37,9 +62,11 @@ export interface BiometricStatus {
 }
 
 export interface AdminDashboardData {
+  summary: DashboardSummary;
   metrics: DashboardMetric[];
   hourlyActivity: HourlyActivity[];
   recentAlerts: RecentAlert[];
   recentAttendances: RecentAttendance[];
+  verificationSummary: VerificationSummary;
   biometricStatus: BiometricStatus;
 }
